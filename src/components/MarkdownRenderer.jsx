@@ -5,6 +5,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import { Copy, Check } from "lucide-react";
+import { useApp } from "../context/AppContext";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/atom-one-dark.css";
 
@@ -43,8 +44,13 @@ const CodeBlock = ({ language, children }) => {
 };
 
 const MarkdownRenderer = ({ content }) => {
+    const { isDark } = useApp();
+
     return (
-        <div className="markdown-content prose prose-sm sm:prose max-w-none text-[#eeeeee]">
+        <div
+            className="markdown-content prose prose-sm sm:prose max-w-none"
+            style={{ color: isDark ? "#eeeeee" : "#000000" }}
+        >
             <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[
@@ -185,7 +191,13 @@ const MarkdownRenderer = ({ content }) => {
                     // Blockquotes
                     blockquote({ children }) {
                         return (
-                            <blockquote className="border-l-4 border-[#444] pl-4 py-2 my-4 text-[#aaa]">
+                            <blockquote
+                                className="border-l-4 pl-4 py-2 my-4"
+                                style={{
+                                    borderColor: isDark ? "#444" : "#ccc",
+                                    color: isDark ? "#aaa" : "#666",
+                                }}
+                            >
                                 {children}
                             </blockquote>
                         );
@@ -213,7 +225,12 @@ const MarkdownRenderer = ({ content }) => {
                     // Strong/Bold
                     strong({ children }) {
                         return (
-                            <strong className="font-bold text-white">
+                            <strong
+                                className="font-bold"
+                                style={{
+                                    color: isDark ? "#ffffff" : "#000000",
+                                }}
+                            >
                                 {children}
                             </strong>
                         );
@@ -222,7 +239,14 @@ const MarkdownRenderer = ({ content }) => {
                     // Emphasis/Italic
                     em({ children }) {
                         return (
-                            <em className="italic text-gray-300">{children}</em>
+                            <em
+                                className="italic"
+                                style={{
+                                    color: isDark ? "#cccccc" : "#333333",
+                                }}
+                            >
+                                {children}
+                            </em>
                         );
                     },
                 }}

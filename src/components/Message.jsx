@@ -1,10 +1,11 @@
 import React from "react";
 import { Loader2 } from "lucide-react";
 import MarkdownRenderer from "./MarkdownRenderer";
+import { useApp } from "../context/AppContext";
 
 const Message = ({ message, isStreaming = false, isOwn = false }) => {
     const isLoading = message?.isLoading || false;
-
+    const { isDark } = useApp();
     return (
         <div
             className={`flex ${
@@ -21,10 +22,12 @@ const Message = ({ message, isStreaming = false, isOwn = false }) => {
                 {/* Message bubble */}
                 <div
                     className={`rounded-2xl px-4 py-3 shadow-lg ${
-                        isOwn
-                            ? "bg-[#F3F4F7] dark:bg-[#1F1F1F] text-gray-900 dark:text-white rounded-br-sm"
-                            : "bg-[#F3F4F7] dark:bg-[#1F1F1F] text-gray-900 dark:text-gray-100 rounded-bl-sm"
+                        isOwn ? "rounded-br-sm" : "rounded-bl-sm"
                     }`}
+                    style={{
+                        backgroundColor: "var(--text-input-color)",
+                        color: isDark ? "#FFFFFF" : "#000000",
+                    }}
                 >
                     <div>
                         {isStreaming ? (
@@ -43,7 +46,7 @@ const Message = ({ message, isStreaming = false, isOwn = false }) => {
                         {/* Timestamp inside message bubble */}
                         {message?.created_at && !isLoading && (
                             <div
-                                className={`text-xs text-green-600 dark:text-green-500 mt-2 ${
+                                className={`text-xs text-green-600 mt-2 ${
                                     isOwn ? "text-right" : "text-left"
                                 }`}
                             >

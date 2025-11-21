@@ -6,6 +6,18 @@ import aiLogo from "../assets/ai_logo.png";
 const ChatHeader = ({ isConnected, chatName = "Yordamchi tipratikon" }) => {
     const { isDark } = useApp();
 
+    const goBack = () => {
+        console.log("🔙 Back button clicked");
+
+        if (window.AndroidChat && window.AndroidChat.onBackFromWeb) {
+            console.log("📱 Calling Android app back function");
+            window.AndroidChat.onBackFromWeb();
+        } else {
+            console.log("🌐 Using browser back (fallback)");
+            window.history.back();
+        }
+    };
+
     return (
         <div
             className="border-b border-gray-700 px-4 py-3 rounded-b-[10px] shadow-sm shadow-white/10"
@@ -17,7 +29,7 @@ const ChatHeader = ({ isConnected, chatName = "Yordamchi tipratikon" }) => {
                     className={`flex-shrink-0 p-1 rounded-full ${
                         isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
                     } transition-colors`}
-                    onClick={() => window.history.back()}
+                    onClick={goBack}
                 >
                     <ArrowLeft
                         className="w-6 h-6"
