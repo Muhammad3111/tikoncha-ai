@@ -3,6 +3,7 @@ import wsService from "../services/websocket";
 
 export const useWebSocket = (token) => {
     const [isConnected, setIsConnected] = useState(false);
+    const [isConnecting, setIsConnecting] = useState(false);
     const [messages, setMessages] = useState([]);
     const [streamingMessage, setStreamingMessage] = useState(null);
     const [error, setError] = useState(null);
@@ -27,8 +28,9 @@ export const useWebSocket = (token) => {
         const handleConnectionStatus = ({ connected }) => {
             console.log("📡 Connection status changed:", connected);
             setIsConnected(connected);
+            setIsConnecting(false); // Stop connecting when status changes
             if (!connected) {
-                setError("Disconnected from server");
+                setError(null); // Remove toast error
             } else {
                 setError(null);
             }
@@ -136,8 +138,10 @@ export const useWebSocket = (token) => {
         wsService.on("error", handleError);
 
         // Connect
+        setIsConnecting(true);
         wsService.connect(token).catch((err) => {
             setError("Failed to connect: " + err.message);
+            setIsConnecting(false);
         });
 
         // Cleanup
@@ -203,9 +207,9 @@ export const useWebSocket = (token) => {
                 return;
             }
 
-            // Set timeout - if no response in 10 seconds, clear loading
+            // Set timeout - minimum 2 seconds loading, then check for response
             sendTimeoutRef.current = setTimeout(() => {
-                console.warn("No response from server after 10 seconds");
+                console.warn("No response from server after 2 seconds");
                 setIsSending(false);
                 pendingMessageIdRef.current = null;
 
@@ -217,7 +221,7 @@ export const useWebSocket = (token) => {
                             : m
                     )
                 );
-            }, 10000);
+            }, 2000);
         },
         []
     );
@@ -241,6 +245,7 @@ export const useWebSocket = (token) => {
 
     return {
         isConnected,
+        isConnecting,
         messages,
         streamingMessage,
         error,

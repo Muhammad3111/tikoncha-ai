@@ -49,7 +49,7 @@ const MarkdownRenderer = ({ content }) => {
     return (
         <div
             className="markdown-content prose prose-sm sm:prose max-w-none"
-            style={{ color: isDark ? "#eeeeee" : "#000000" }}
+            style={{ color: "var(--text-color)" }}
         >
             <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
@@ -161,9 +161,7 @@ const MarkdownRenderer = ({ content }) => {
                     // Paragraphs
                     p({ children }) {
                         return (
-                            <p className="mb-4 text-[#eeeeee] leading-relaxed">
-                                {children}
-                            </p>
+                            <p className="mb-4 leading-relaxed">{children}</p>
                         );
                     },
 
@@ -195,7 +193,7 @@ const MarkdownRenderer = ({ content }) => {
                                 className="border-l-4 pl-4 py-2 my-4"
                                 style={{
                                     borderColor: isDark ? "#444" : "#ccc",
-                                    color: isDark ? "#aaa" : "#666",
+                                    color: "var(--text-secondary)",
                                 }}
                             >
                                 {children}
@@ -227,9 +225,7 @@ const MarkdownRenderer = ({ content }) => {
                         return (
                             <strong
                                 className="font-bold"
-                                style={{
-                                    color: isDark ? "#ffffff" : "#000000",
-                                }}
+                                style={{ color: "var(--text-color)" }}
                             >
                                 {children}
                             </strong>
@@ -241,9 +237,7 @@ const MarkdownRenderer = ({ content }) => {
                         return (
                             <em
                                 className="italic"
-                                style={{
-                                    color: isDark ? "#cccccc" : "#333333",
-                                }}
+                                style={{ color: "var(--text-secondary)" }}
                             >
                                 {children}
                             </em>

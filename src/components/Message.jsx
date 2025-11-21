@@ -26,7 +26,7 @@ const Message = ({ message, isStreaming = false, isOwn = false }) => {
                     }`}
                     style={{
                         backgroundColor: "var(--text-input-color)",
-                        color: isDark ? "#FFFFFF" : "#000000",
+                        color: "var(--text-color)",
                     }}
                 >
                     <div>
@@ -55,6 +55,7 @@ const Message = ({ message, isStreaming = false, isOwn = false }) => {
                                 ).toLocaleTimeString("en-US", {
                                     hour: "2-digit",
                                     minute: "2-digit",
+                                    hour12: false,
                                 })}
                             </div>
                         )}

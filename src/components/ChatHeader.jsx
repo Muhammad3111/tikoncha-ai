@@ -3,7 +3,11 @@ import { ArrowLeft } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import aiLogo from "../assets/ai_logo.png";
 
-const ChatHeader = ({ isConnected, chatName = "Yordamchi tipratikon" }) => {
+const ChatHeader = ({
+    isConnected,
+    isConnecting,
+    chatName = "Yordamchi tipratikon",
+}) => {
     const { isDark } = useApp();
 
     const goBack = () => {
@@ -54,7 +58,21 @@ const ChatHeader = ({ isConnected, chatName = "Yordamchi tipratikon" }) => {
                     >
                         {chatName}
                     </h1>
-                    <p className="text-green-500 text-xs">Online</p>
+                    <p
+                        className={`text-xs ${
+                            isConnecting
+                                ? "text-yellow-500"
+                                : isConnected
+                                ? "text-green-500"
+                                : "text-red-500"
+                        }`}
+                    >
+                        {isConnecting
+                            ? "Connecting"
+                            : isConnected
+                            ? "Online"
+                            : "Disconnected"}
+                    </p>
                 </div>
             </div>
         </div>

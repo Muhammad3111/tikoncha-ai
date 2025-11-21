@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import Message from "./Message";
+import DateSeparator from "./DateSeparator";
 import aiLogo from "../assets/ai_logo.png";
 
 const ChatContainer = ({
@@ -70,14 +71,35 @@ const ChatContainer = ({
                     )}
 
                 {messages.map((message, index) => {
-                    // User xabari: is_mine yoki isOptimistic
-                    const isOwn = message.is_mine || message.isOptimistic;
+                    // User xabari: is_mine yoki isOptimistic yoki isOwn (API dan kelgan)
+                    const isOwn =
+                        message.is_mine ||
+                        message.isOptimistic ||
+                        message.isOwn;
+
+                    // Sana separator kerakmi tekshirish
+                    const shouldShowDateSeparator = () => {
+                        if (index === 0) return true; // Birinchi xabar uchun har doim
+
+                        const currentDate = new Date(message.created_at);
+                        const previousDate = new Date(
+                            messages[index - 1].created_at
+                        );
+
+                        // Kun farqi bor bo'lsa separator ko'rsatish
+                        return (
+                            currentDate.toDateString() !==
+                            previousDate.toDateString()
+                        );
+                    };
+
                     return (
-                        <Message
-                            key={message.id || index}
-                            message={message}
-                            isOwn={isOwn}
-                        />
+                        <React.Fragment key={message.id || index}>
+                            {shouldShowDateSeparator() && (
+                                <DateSeparator date={message.created_at} />
+                            )}
+                            <Message message={message} isOwn={isOwn} />
+                        </React.Fragment>
                     );
                 })}
 

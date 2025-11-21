@@ -1,5 +1,5 @@
 // Chat API xizmatlari
-const BASE_URL = ""; // Base URL bo'sh, chunki relative path ishlatamiz
+const BASE_URL = "https://api.tikoncha.uz"; // Tikoncha API base URL
 
 /**
  * Chat history ni olish
@@ -12,9 +12,11 @@ export const getChatHistory = async (chatId, token, limit = 50) => {
     try {
         console.log("📋 Loading chat history:", { chatId, limit });
 
-        const url = `/chat/messages?chat_id=${encodeURIComponent(
+        const url = `${BASE_URL}/chat/messages?chat_id=${encodeURIComponent(
             chatId
         )}&limit=${limit}`;
+
+        console.log("🌐 API URL:", url);
 
         const response = await fetch(url, {
             method: "GET",
@@ -41,26 +43,30 @@ export const getChatHistory = async (chatId, token, limit = 50) => {
 };
 
 /**
- * API dan kelgan xabarni Message komponenti uchun formatga o'tkazish
+ * API dan kelgan xabarni React komponentlar uchun formatga o'tkazish
  * @param {Object} apiMessage - API dan kelgan xabar
- * @returns {Object} Formatted message
+ * @returns {Object} React komponent uchun format
  */
 export const formatMessageFromApi = (apiMessage) => {
+    // sender_name ga qarab message positioning
+    const isBot = apiMessage.sender_name === "bot";
+
+    console.log(
+        `📝 Formatting message: ${apiMessage.sender_name} -> ${
+            isBot ? "Bot (left)" : "User (right)"
+        }`
+    );
+
     return {
         id: apiMessage.id,
         text: apiMessage.text,
-        timestamp: new Date(apiMessage.created_at).toISOString(),
-        isOwn: apiMessage.is_mine,
-        sender: {
-            id: apiMessage.sender_id,
-            name: apiMessage.sender_name,
-            avatar: apiMessage.sender_avatar,
-        },
-        type: apiMessage.type,
-        attachment_url: apiMessage.attachment_url,
-        reply_to_id: apiMessage.reply_to_id,
-        client_msg_id: apiMessage.client_msg_id,
-        is_read: apiMessage.is_read,
+        created_at: apiMessage.created_at,
+        isLoading: false,
+        isOptimistic: false,
+        // Bot bo'lsa chap tomonda (isOwn: false), aks holda o'ng tomonda (isOwn: true)
+        isOwn: !isBot,
+        sender_name: apiMessage.sender_name,
+        sender_avatar: apiMessage.sender_avatar,
         edited_at: apiMessage.edited_at,
         deleted_at: apiMessage.deleted_at,
     };

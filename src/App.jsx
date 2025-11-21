@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useWebSocket } from "./hooks/useWebSocket";
 import { useApp } from "./context/AppContext";
 import { getChatHistory, formatMessagesFromApi } from "./services/chatApi";
@@ -11,6 +11,7 @@ function App() {
     const { token, chatId, chatTitle, isDark, isReady } = useApp();
     const {
         isConnected,
+        isConnecting,
         messages,
         streamingMessage,
         error,
@@ -27,10 +28,13 @@ function App() {
     console.log("🎨 Theme:", isDark ? "dark" : "light");
     console.log("🔑 Token:", token ? "Set" : "Not set");
     console.log("📱 App Ready:", isReady);
+    console.log("📊 History Loaded:", historyLoaded);
+    console.log("⏳ Loading History:", isLoadingHistory);
+    console.log("📝 Messages Count:", messages.length);
 
     // Chat history ni yuklash
-    const loadChatHistory = async () => {
-        if (!token || !chatId || historyLoaded || isLoadingHistory) {
+    const loadChatHistory = useCallback(async () => {
+        if (!token || !chatId || isLoadingHistory) {
             return;
         }
 
@@ -60,14 +64,16 @@ function App() {
         } finally {
             setIsLoadingHistory(false);
         }
-    };
+    }, [token, chatId, setInitialMessages]);
 
     // Token va chatId tayyor bo'lganda history ni yuklash
     useEffect(() => {
-        if (isReady && token && chatId && !historyLoaded) {
+        if (isReady && token && chatId && !isLoadingHistory) {
+            console.log("🔄 Starting to load chat history...");
             loadChatHistory();
         }
-    }, [isReady, token, chatId, historyLoaded]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isReady, token, chatId]); // loadChatHistory intentionally omitted to prevent infinite loop
 
     // Agar token yoki chatId yo'q bo'lsa, loading ko'rsatish
     if (!isReady || !token || !chatId) {
@@ -101,7 +107,11 @@ function App() {
             }}
         >
             {/* Header */}
-            <ChatHeader isConnected={isConnected} chatName={chatTitle} />
+            <ChatHeader
+                isConnected={isConnected}
+                isConnecting={isConnecting}
+                chatName={chatTitle}
+            />
 
             {/* Error Banner */}
             {error && showError && (
