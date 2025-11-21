@@ -230,6 +230,15 @@ export const useWebSocket = (token) => {
         wsService.markAsRead(chatId, messageId);
     }, []);
 
+    // History xabarlarini o'rnatish funksiyasi
+    const setInitialMessages = useCallback((historyMessages) => {
+        console.log(
+            "📋 Setting initial messages from history:",
+            historyMessages.length
+        );
+        setMessages(historyMessages);
+    }, []);
+
     return {
         isConnected,
         messages,
@@ -239,5 +248,6 @@ export const useWebSocket = (token) => {
         sendMessage,
         editMessage,
         markAsRead,
+        setInitialMessages,
     };
 };

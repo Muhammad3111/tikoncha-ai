@@ -2,7 +2,11 @@ import React, { useEffect, useRef } from "react";
 import Message from "./Message";
 import aiLogo from "../assets/ai_logo.png";
 
-const ChatContainer = ({ messages, streamingMessage }) => {
+const ChatContainer = ({
+    messages,
+    streamingMessage,
+    isLoadingHistory = false,
+}) => {
     const messagesEndRef = useRef(null);
     const containerRef = useRef(null);
 
@@ -17,29 +21,53 @@ const ChatContainer = ({ messages, streamingMessage }) => {
     return (
         <div
             ref={containerRef}
-            className="flex-1 overflow-y-auto bg-[#F5F7F4] dark:bg-[#010D01] py-4 pb-32"
+            className="flex-1 overflow-y-auto py-4 pb-32"
+            style={{ backgroundColor: "var(--background-color)" }}
         >
             <div className="max-w-4xl mx-auto">
-                {messages.length === 0 && !streamingMessage && (
-                    <div className="flex flex-col items-center justify-center h-full text-center px-4 py-20">
-                        <div className="w-20 h-20 rounded-full overflow-hidden mb-6 shadow-lg">
-                            <img
-                                src={aiLogo}
-                                alt="Yordamchi Tikoratikon"
-                                className="w-full h-full object-cover"
-                            />
+                {/* History loading indicator */}
+                {isLoadingHistory && (
+                    <div className="flex justify-center py-8">
+                        <div className="flex items-center gap-3">
+                            <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span
+                                className="text-sm"
+                                style={{ color: "var(--text-secondary)" }}
+                            >
+                                Xabarlar yuklanmoqda...
+                            </span>
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                            Suhbatni boshlang
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-400 max-w-md">
-                            Xabar yuboring va Yordamchi Tikoratikon sizga yordam
-                            beradi. Savollaringizga javob berish, rasmlarni
-                            tahlil qilish, audio transkripsiya va boshqa ko'p
-                            narsalar.
-                        </p>
                     </div>
                 )}
+
+                {messages.length === 0 &&
+                    !streamingMessage &&
+                    !isLoadingHistory && (
+                        <div className="flex flex-col items-center justify-center h-full text-center px-4 py-20">
+                            <div className="w-20 h-20 rounded-full overflow-hidden mb-6 shadow-lg">
+                                <img
+                                    src={aiLogo}
+                                    alt="Yordamchi Tikoratikon"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <h2
+                                className="text-2xl font-bold mb-2"
+                                style={{ color: "var(--text-color)" }}
+                            >
+                                Suhbatni boshlang
+                            </h2>
+                            <p
+                                className="max-w-md"
+                                style={{ color: "var(--text-secondary)" }}
+                            >
+                                Xabar yuboring va Yordamchi Tikoratikon sizga
+                                yordam beradi. Savollaringizga javob berish,
+                                rasmlarni tahlil qilish, audio transkripsiya va
+                                boshqa ko'p narsalar.
+                            </p>
+                        </div>
+                    )}
 
                 {messages.map((message, index) => {
                     // User xabari: is_mine yoki isOptimistic

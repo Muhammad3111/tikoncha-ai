@@ -8,13 +8,8 @@ const ChatHeader = ({ isConnected, chatName = "Yordamchi tipratikon" }) => {
 
     return (
         <div
-            className={`${
-                isDark
-                    ? "bg-[#010D01] border-gray-700"
-                    : "bg-white border-gray-200"
-            } border-b px-4 py-3 rounded-b-[10px] shadow-sm ${
-                isDark ? "shadow-white/10" : "shadow-gray-200"
-            }`}
+            className="border-b border-gray-700 px-4 py-3 rounded-b-[10px] shadow-sm shadow-white/10"
+            style={{ backgroundColor: "var(--background-color)" }}
         >
             <div className="max-w-4xl mx-auto flex items-center gap-3">
                 {/* Back button */}
@@ -25,9 +20,8 @@ const ChatHeader = ({ isConnected, chatName = "Yordamchi tipratikon" }) => {
                     onClick={() => window.history.back()}
                 >
                     <ArrowLeft
-                        className={`w-6 h-6 ${
-                            isDark ? "text-white" : "text-gray-900"
-                        }`}
+                        className="w-6 h-6"
+                        style={{ color: "var(--text-color)" }}
                     />
                 </button>
 
@@ -43,9 +37,8 @@ const ChatHeader = ({ isConnected, chatName = "Yordamchi tipratikon" }) => {
                 {/* Chat info */}
                 <div className="flex-1">
                     <h1
-                        className={`${
-                            isDark ? "text-white" : "text-gray-900"
-                        } font-semibold text-lg`}
+                        className="font-semibold text-lg"
+                        style={{ color: "var(--text-color)" }}
                     >
                         {chatName}
                     </h1>

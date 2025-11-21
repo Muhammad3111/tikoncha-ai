@@ -175,13 +175,34 @@ export const AppProvider = ({ children }) => {
         };
     }, []);
 
-    // Font size ni CSS variable sifatida o'rnatish
+    // Font size va theme ranglarini CSS variable sifatida o'rnatish
     useEffect(() => {
         document.documentElement.style.setProperty(
             "--base-font-size",
             `${fontSize}px`
         );
     }, [fontSize]);
+
+    // Theme ranglarini o'rnatish
+    useEffect(() => {
+        const root = document.documentElement;
+
+        if (theme === "dark") {
+            // Dark theme ranglari
+            root.style.setProperty("--text-input-color", "#1F1F1F");
+            root.style.setProperty("--background-color", "#010D01");
+            root.style.setProperty("--text-color", "#FFFFFF");
+            root.style.setProperty("--text-secondary", "#CCCCCC");
+            console.log("🌙 Dark theme ranglari o'rnatildi");
+        } else {
+            // Light theme ranglari
+            root.style.setProperty("--text-input-color", "#FFFFFF");
+            root.style.setProperty("--background-color", "#F5F7F5");
+            root.style.setProperty("--text-color", "#000000");
+            root.style.setProperty("--text-secondary", "#666666");
+            console.log("☀️ Light theme ranglari o'rnatildi");
+        }
+    }, [theme]);
 
     const value = {
         token,

@@ -40,21 +40,17 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
 
     return (
         <div
-            className={`fixed bottom-0 left-0 right-0 z-50 ${
-                isDark
-                    ? "border-gray-700/50 bg-[#010D01]/80"
-                    : "border-gray-200/50 bg-[#F5F7F4]/80"
-            } backdrop-blur-md`}
+            className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-700/50 backdrop-blur-md"
+            style={{ backgroundColor: "var(--background-color)" + "CC" }}
         >
             <form onSubmit={handleSubmit} className="p-4">
                 <div className="max-w-4xl mx-auto">
                     {/* Message input container */}
                     <div
                         className={`relative ${
-                            isDark ? "bg-[#1F1F1F]" : "bg-gray-100"
-                        } ${
                             isMultiLine ? "rounded-3xl" : "rounded-full"
                         } flex items-center gap-2 px-3 py-2 transition-all`}
+                        style={{ backgroundColor: "var(--text-input-color)" }}
                     >
                         {/* Plus button (chap tomonda, input ichida) */}
                         <button
@@ -75,10 +71,11 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
                             placeholder="Xabar yozish"
                             disabled={disabled || isSending}
                             rows={1}
-                            className={`flex-1 px-2 py-2 bg-transparent placeholder-[#AFAFAF] ${
-                                isDark ? "text-white" : "text-[#1A1A1A]"
-                            } resize-none outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed max-h-[150px] overflow-y-auto border-none`}
-                            style={{ minHeight: "36px" }}
+                            className="flex-1 px-2 py-2 bg-transparent placeholder-[#AFAFAF] resize-none outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed max-h-[150px] overflow-y-auto border-none"
+                            style={{
+                                color: "var(--text-color)",
+                                minHeight: "36px",
+                            }}
                         />
 
                         {/* Send button (o'ng tomonda, input ichida, faqat matn bo'lganda) */}
