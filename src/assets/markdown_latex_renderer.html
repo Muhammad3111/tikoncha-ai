@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Renderer</title>
+
+    <!-- 1. KaTeX CSS -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+          crossorigin="anonymous">
+
+    <!-- 2. Highlight.js CSS (Atom One Dark) -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
+    <style>
+        :root {
+          --base-font-size: 16px;
+
+          /* Dark theme */
+          --text-color: #eeeeee;
+          --link-color: #58a6ff;
+          --quote-color: #aaa;
+          --quote-border: #444;
+
+          --table-border: #444;
+          --table-header-bg: #333;
+          --table-header-text: #fff;
+          --table-row-even: #1a1a1a;
+          --table-row-hover: #222;
+        }
+
+        [data-theme="light"] {
+          --text-color: #222222;
+          --link-color: #0969da;
+          --quote-color: #555;
+          --quote-border: #ddd;
+
+          --table-border: #d0d7de;
+          --table-header-bg: #f6f8fa;
+          --table-header-text: #24292f;
+          --table-row-even: #ffffff;
+          --table-row-hover: #f6f8fa;
+        }
+
+        body {
+          background-color: transparent;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          font-size: var(--base-font-size);
+          line-height: 1.6;
+          color: var(--text-color);
+          margin: 0;
+          padding: 10px;
+          word-wrap: break-word;
+        }
+
+        p { margin-bottom: 1em; }
+        h1, h2, h3 {
+          margin-top: 1.5em;
+          margin-bottom: 0.5em;
+          font-weight: 600;
+          border-bottom: 1px solid var(--table-border);
+          padding-bottom: 0.3em;
+        }
+        h1 { border-bottom: none; }
+
+        a { color: var(--link-color); text-decoration: none; }
+
+        /* Code block */
+        pre {
+          margin: 10px 0;
+          padding: 8px;
+          border-radius: 8px;
+          border: 1px solid rgba(128, 128, 128, 0.3);
+          position: relative;
+          overflow: hidden;
+          background-color: #282c34;
+        }
+
+        pre code.hljs {
+          display: block;
+          padding: 16px;
+          padding-top: 32px;
+          overflow-x: auto;
+          font-family: Menlo, Consolas, "Courier New", monospace;
+          font-size: 0.9em;
+          line-height: 1.5;
+          color: #abb2bf;
+        }
+
+        /* Inline code */
+        :not(pre) > code {
+          background-color: rgba(128, 128, 128, 0.15);
+          color: #e06c75;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-family: Menlo, Consolas, "Courier New", monospace;
+          font-size: 0.9em;
+        }
+
+        /* Table */
+        table {
+          border-collapse: collapse;
+          width: 100%;
+          margin: 1.5em 0;
+          font-size: 0.95em;
+        }
+
+        th, td {
+          border: 1px solid var(--table-border);
+          padding: 10px 14px;
+          text-align: left;
+        }
+
+        th {
+          background-color: var(--table-header-bg);
+          font-weight: 600;
+          color: var(--table-header-text);
+        }
+
+        tr:nth-child(even) {
+          background-color: var(--table-row-even);
+        }
+
+        tr:hover {
+          background-color: var(--table-row-hover);
+        }
+
+        /* Copy button */
+        .copy-btn {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          background-color: transparent;
+          color: #888;
+          border: none;
+          padding: 4px;
+          cursor: pointer;
+          opacity: 0.6;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          z-index: 10;
+        }
+
+        .copy-btn:hover {
+          opacity: 1;
+          color: #fff;
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .copy-btn svg {
+          width: 18px;
+          height: 18px;
+        }
+
+        .katex-display {
+          overflow-x: auto;
+          overflow-y: hidden;
+          padding: 8px 0;
+          margin: 1em 0;
+        }
+    </style>
+</head>
+<body>
+<div id="content"></div>
+
+<!-- JS kutubxonalar -->
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<script>
+    let mathCache = [];
+
+    function tokenizeMath(text) {
+      mathCache = [];
+      let i = 0;
+      const replaceFunc = (match) => {
+        const token = `MATHBLOCK${i++}ENDMATHBLOCK`;
+        mathCache.push({ token, value: match });
+        return token;
+      };
+      text = text.replace(/\\\[([\s\S]*?)\\\]/g, replaceFunc);
+      text = text.replace(/\$\$([\s\S]*?)\$\$/g, replaceFunc);
+      text = text.replace(/\\\(([\s\S]*?)\\\)/g, replaceFunc);
+      text = text.replace(/\$([^\n\r]*?)\$/g, replaceFunc);
+      return text;
+    }
+
+    function detokenizeMath(html) {
+      mathCache.forEach(item => {
+        html = html.split(item.token).join(item.value);
+      });
+      return html;
+    }
+
+    const COPY_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2-2v1"></path>
+    </svg>`;
+
+    const CHECK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+      fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>`;
+
+    function addCopyButtons() {
+      const preBlocks = document.querySelectorAll('pre');
+      preBlocks.forEach(pre => {
+        if (pre.querySelector('.copy-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.innerHTML = COPY_ICON;
+        btn.title = "Copy code";
+
+        btn.onclick = () => {
+          const code = pre.querySelector('code');
+          const textToCopy = code ? code.innerText : pre.innerText;
+          const textArea = document.createElement("textarea");
+          textArea.value = textToCopy;
+          document.body.appendChild(textArea);
+          textArea.select();
+
+          try {
+            document.execCommand('copy');
+            btn.innerHTML = CHECK_ICON;
+            setTimeout(() => { btn.innerHTML = COPY_ICON; }, 2000);
+          } catch (err) {
+            console.error('Failed to copy', err);
+          }
+
+          document.body.removeChild(textArea);
+        };
+
+        pre.appendChild(btn);
+      });
+    }
+
+    // Android’dan chaqiriladigan asosiy funksiya
+    function renderContent(rawText, theme = 'dark', fontSize = '16px') {
+      const container = document.getElementById('content');
+
+      if (!window.marked || !window.renderMathInElement || !window.hljs) {
+        window.addEventListener('load', () => renderContent(rawText, theme, fontSize));
+        return;
+      }
+
+      // Theme
+      document.documentElement.setAttribute('data-theme', theme);
+
+      // Font size
+      let sizeStr = fontSize.toString();
+      if (!isNaN(sizeStr)) {
+        sizeStr += 'px';
+      }
+      document.documentElement.style.setProperty('--base-font-size', sizeStr);
+
+      // Marked config
+      marked.setOptions({
+        highlight: function(code, lang) {
+          const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+          return hljs.highlight(code, { language }).value;
+        },
+        langPrefix: 'hljs language-',
+        breaks: true,
+        gfm: true,
+      });
+
+      // 1) Math protect
+      const protectedText = tokenizeMath(rawText);
+
+      // 2) Markdown → HTML
+      const htmlWithTokens = marked.parse(protectedText);
+
+      // 3) Math restore
+      container.innerHTML = detokenizeMath(htmlWithTokens);
+
+      // 4) Code highlight
+      container.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+      });
+
+      // 5) Copy buttonlar
+      addCopyButtons();
+
+      // 6) Math render
+      renderMathInElement(container, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '\\[', right: '\\]', display: true },
+          { left: '$', right: '$', display: false },
+          { left: '\\(', right: '\\)', display: false },
+        ],
+        throwOnError: false
+      });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1f2937;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Markdown content styling */
+.markdown-content {
+    color: #e5e7eb;
+    line-height: 1.6;
+}
+
+.markdown-content code {
+    font-family: "Courier New", Courier, monospace;
+}
+
+.markdown-content pre {
+    margin: 1rem 0;
+    overflow-x: auto;
+}
+
+.markdown-content pre code {
+    display: block;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+}
+
+/* KaTeX math styling */
+.katex {
+    font-size: 1.1em;
+    color: #eeeeee !important;
+}
+
+/* Inline math */
+.math.math-inline {
+    display: inline;
+    margin: 0 0.2em;
+}
+
+.math.math-inline .katex {
+    font-size: 1em;
+}
+
+/* Display math */
+.math.math-display {
+    display: block;
+    margin: 1rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+}
+
+.katex-display {
+    margin: 1rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+}
+
+.katex-html {
+    color: #eeeeee !important;
+}
+
+/* Math delimiters */
+.markdown-content .math {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* Inline code vs inline math */
+.markdown-content code.language-math {
+    background: transparent !important;
+    color: #eeeeee !important;
+    padding: 0 !important;
+}
+
+/* Code highlighting adjustments */
+.hljs {
+    background: #1f2937 !important;
+    padding: 1rem !important;
+    border-radius: 0.5rem;
+}
+
+/* Responsive text sizing */
+@media (max-width: 640px) {
+    .markdown-content {
+        font-size: 0.9rem;
+    }
+
+    .markdown-content code {
+        font-size: 0.85rem;
+    }
+
+    .katex {
+        font-size: 1em;
+    }
+}
+
+/* Table responsive wrapper */
+.markdown-content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Ensure body takes full height */
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Smooth transitions */
+* {
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+button,
+input,
+textarea {
+    transition: all 0.2s ease;
+}
+
+/* Focus styles */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Pulse animation for connection indicator */
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
