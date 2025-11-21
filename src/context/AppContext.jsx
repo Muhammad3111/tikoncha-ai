@@ -23,6 +23,48 @@ export const AppProvider = ({ children }) => {
             "📱 AppContext initialized, waiting for data from mobile app..."
         );
 
+        // URL parametrlarini tekshirish (HTTP headerlar o'rniga)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get("token");
+        const urlChatId = urlParams.get("chatId");
+        const urlChatTitle = urlParams.get("chatTitle");
+        const urlTheme = urlParams.get("theme");
+        const urlFontSize = urlParams.get("fontSize");
+
+        // Agar URL parametrlar mavjud bo'lsa
+        if (urlToken || urlChatId) {
+            console.group(
+                "🔗 URL parametrlardan ma'lumotlar (Header o'rniga):"
+            );
+            console.log(
+                "Token:",
+                urlToken ? `${urlToken.substring(0, 20)}...` : "Yo'q"
+            );
+            console.log("Chat ID:", urlChatId || "Yo'q");
+            console.log("Chat Title:", urlChatTitle || "Yo'q");
+            console.log("Theme:", urlTheme || "Yo'q");
+            console.log("Font Size:", urlFontSize || "Yo'q");
+            console.groupEnd();
+
+            // URL parametrlardan state ni yangilash
+            if (urlToken) {
+                setToken(
+                    urlToken.startsWith("Bearer ")
+                        ? urlToken
+                        : `Bearer ${urlToken}`
+                );
+            }
+            if (urlChatId) setChatId(urlChatId);
+            if (urlChatTitle) setChatTitle(decodeURIComponent(urlChatTitle));
+            if (urlTheme) setTheme(urlTheme);
+            if (urlFontSize) setFontSize(parseInt(urlFontSize));
+
+            setIsReady(true);
+            console.log(
+                "✅ App initialized with URL parameters (instead of headers)"
+            );
+        }
+
         // Mobile appdan postMessage orqali ma'lumotlarni qabul qilish
         const handleMessage = (event) => {
             try {
@@ -32,6 +74,23 @@ export const AppProvider = ({ children }) => {
                         : event.data;
 
                 console.log("📱 Received message from mobile app:", data);
+
+                // Kelgan ma'lumotlarni batafsil console ga chiqarish
+                console.group("🔍 WebView dan kelgan ma'lumotlar:");
+                console.log("Type:", data.type);
+                console.log(
+                    "Token:",
+                    data.token ? `${data.token.substring(0, 20)}...` : "Yo'q"
+                );
+                console.log("Chat ID:", data.chatId || "Yo'q");
+                console.log("Chat Title:", data.chatTitle || "Yo'q");
+                console.log("Theme:", data.theme || "Yo'q");
+                console.log("Font Size:", data.fontSize || "Yo'q");
+                console.log(
+                    "Barcha ma'lumotlar:",
+                    JSON.stringify(data, null, 2)
+                );
+                console.groupEnd();
 
                 // Token
                 if (data.token) {
