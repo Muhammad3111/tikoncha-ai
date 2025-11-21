@@ -30,13 +30,13 @@ const ChatHeader = ({
             <div className="max-w-4xl mx-auto flex items-center gap-3">
                 {/* Back button */}
                 <button
-                    className={`flex-shrink-0 p-1 rounded-full ${
-                        isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+                    className={`flex-shrink-0 p-2 rounded-lg ${
+                        isDark ? "bg-[#1F1F1F]" : "bg-[#F3F4F7]"
                     } transition-colors`}
                     onClick={goBack}
                 >
                     <ArrowLeft
-                        className="w-6 h-6"
+                        className="w-4 h-4"
                         style={{ color: "var(--text-color)" }}
                     />
                 </button>

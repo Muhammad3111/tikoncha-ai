@@ -161,7 +161,7 @@ const MarkdownRenderer = ({ content }) => {
                     // Paragraphs
                     p({ children }) {
                         return (
-                            <p className="mb-4 leading-relaxed">{children}</p>
+                            <p className="mb-1 leading-relaxed">{children}</p>
                         );
                     },
 

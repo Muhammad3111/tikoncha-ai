@@ -21,8 +21,10 @@ const Message = ({ message, isStreaming = false, isOwn = false }) => {
             >
                 {/* Message bubble */}
                 <div
-                    className={`rounded-2xl px-4 py-3 shadow-lg ${
-                        isOwn ? "rounded-br-sm" : "rounded-bl-sm"
+                    className={`rounded-2xl shadow-lg ${
+                        isOwn
+                            ? "rounded-br-sm px-3 py-2"
+                            : "rounded-bl-sm !bg-transparent"
                     }`}
                     style={{
                         backgroundColor: "var(--text-input-color)",
@@ -46,7 +48,7 @@ const Message = ({ message, isStreaming = false, isOwn = false }) => {
                         {/* Timestamp inside message bubble */}
                         {message?.created_at && !isLoading && (
                             <div
-                                className={`text-xs text-green-600 mt-2 ${
+                                className={`text-xs text-green-600 mt-1 ${
                                     isOwn ? "text-right" : "text-left"
                                 }`}
                             >

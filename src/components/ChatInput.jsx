@@ -39,27 +39,27 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
     const isMultiLine = message.includes("\n") || message.length > 50;
 
     return (
-        <div
-            className="fixed bottom-0 left-0 right-0 z-50 border-gray-700/50 backdrop-blur-md"
-            style={{ backgroundColor: "var(--background-color)" + "CC" }}
-        >
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-gray-700/50">
             <form onSubmit={handleSubmit} className="p-4">
                 <div className="max-w-4xl mx-auto">
                     {/* Message input container */}
                     <div
                         className={`relative ${
                             isMultiLine ? "rounded-3xl" : "rounded-full"
-                        } flex items-center gap-2 px-3 py-2 transition-all`}
-                        style={{ backgroundColor: "var(--text-input-color)" }}
+                        } flex items-center gap-2 px-4 py-1 transition-all shadow-lg`}
+                        style={{
+                            backgroundColor: "var(--text-input-color)",
+                            boxShadow: "var(--text-input-color)",
+                        }}
                     >
                         {/* Plus button (chap tomonda, input ichida) */}
                         <button
                             type="button"
-                            className="flex-shrink-0 w-9 h-9 rounded-full bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center focus:outline-none"
+                            className="flex-shrink-0 w-6 h-6 rounded-lg bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center focus:outline-none"
                             disabled={disabled || isSending}
                             title="Attach file"
                         >
-                            <Plus className="w-5 h-5 text-white" />
+                            <Plus className="w-4 h-4 text-white" />
                         </button>
 
                         {/* Textarea */}
@@ -71,7 +71,7 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
                             placeholder="Xabar yozish"
                             disabled={disabled || isSending}
                             rows={1}
-                            className="flex-1 px-2 py-2 bg-transparent placeholder-[#AFAFAF] resize-none outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed max-h-[150px] overflow-y-auto border-none"
+                            className="flex-1 px-2 py-2 bg-transparent placeholder-[#AFAFAF] resize-none outline-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed max-h-[150px] overflow-y-auto border-none text-sm"
                             style={{
                                 color: "var(--text-color)",
                                 minHeight: "36px",
@@ -83,12 +83,12 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
                             <button
                                 type="submit"
                                 disabled={isSending || disabled}
-                                className="flex-shrink-0 w-9 h-9 rounded-full bg-green-600 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg focus:outline-none"
+                                className="flex-shrink-0 w-6 h-6 rounded-lg bg-green-600 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg focus:outline-none"
                             >
                                 {isSending ? (
                                     <Loader2 className="w-5 h-5 text-white animate-spin" />
                                 ) : (
-                                    <ArrowUp className="w-5 h-5 text-white" />
+                                    <ArrowUp className="w-4 h-4 text-white" />
                                 )}
                             </button>
                         )}
