@@ -63,12 +63,12 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
                             boxShadow: "var(--text-input-color)",
                         }}
                     >
-                        {/* Plus button (chap tomonda, input ichida) */}
+                        {/* Plus button (chap tomonda, input ichida) - hozircha disabled */}
                         <button
                             type="button"
-                            className="flex-shrink-0 w-6 h-6 rounded-lg bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center focus:outline-none"
-                            disabled={disabled || isSending}
-                            title="Attach file"
+                            className="flex-shrink-0 w-6 h-6 rounded-lg bg-gray-500 transition-colors opacity-50 cursor-not-allowed flex items-center justify-center focus:outline-none"
+                            disabled={true}
+                            title="Tez orada..."
                         >
                             <Plus className="w-4 h-4 text-white" />
                         </button>
