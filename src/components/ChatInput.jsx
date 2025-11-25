@@ -28,9 +28,12 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
     }, [isSending]);
 
     const handleKeyDown = (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSubmit(e);
+        // Mobile WebView da Enter bosilganda abzas tashlash
+        // Xabar faqat button orqali yuboriladi
+        if (e.key === "Enter") {
+            // Enter = yangi qator (abzas)
+            // Xabar yuborish uchun button ishlatiladi
+            return; // Default behavior - yangi qator qo'shish
         }
     };
 

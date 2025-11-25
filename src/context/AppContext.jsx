@@ -11,12 +11,16 @@ export const useApp = () => {
 };
 
 export const AppProvider = ({ children }) => {
-    const [token, setToken] = useState(null);
-    const [chatId, setChatId] = useState(null);
+    const [token, setToken] = useState(
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjQwNzExMzQsInN1YiI6IjA1NDBjYWQ4LWM4NDMtNDhhNS1iNjQzLWUyOTc4OGZjM2VmMCIsInR5cGUiOiJhY2Nlc3MifQ.OoK8324k1bd49T-U94Yx3bnPPT7V7PIR8N3SsdojsQo"
+    );
+    const [chatId, setChatId] = useState(
+        "0482aa78-1416-4d84-af37-a38c7f696377"
+    );
     const [chatTitle, setChatTitle] = useState("Yordamchi Tiparatikon");
     const [theme, setTheme] = useState("light");
     const [fontSize, setFontSize] = useState(14);
-    const [isReady, setIsReady] = useState(false);
+    const [isReady, setIsReady] = useState(true);
 
     useEffect(() => {
         console.log(

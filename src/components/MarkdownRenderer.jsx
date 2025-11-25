@@ -16,30 +16,32 @@ const MarkdownRenderer = ({ content, isStreaming = false }) => {
     const containerRef = useRef(null);
     const { isDark } = useApp();
 
-    // Buzilgan KaTeX HTML teglarini tozalash
+    // Buzilgan KaTeX HTML teglarini tozalash (code va jadvallarni himoya qilgan holda)
     const cleanBrokenKatex = (text) => {
         if (!text) return text;
 
-        // 1. Barcha HTML teglarini tozalash
-        text = text.replace(/<span[^>]*>([^<]*)<\/span>/gi, "$1");
-        text = text.replace(/<\/?span[^>]*>/gi, "");
-        text = text.replace(/<\/?math[^>]*>/gi, "");
-        text = text.replace(/<\/?annotation[^>]*>/gi, "");
-        text = text.replace(/<\/?semantics[^>]*>/gi, "");
-        text = text.replace(/<\/?mrow[^>]*>/gi, "");
-        text = text.replace(/<\/?mi[^>]*>/gi, "");
-        text = text.replace(/<\/?mo[^>]*>/gi, "");
-        text = text.replace(/<\/?mn[^>]*>/gi, "");
+        // Himoyalangan bloklar
+        const protectedBlocks = [];
 
-        // 2. HTML attributlarini tozalash
-        text = text.replace(/style="[^"]*"/gi, "");
-        text = text.replace(/class="[^"]*"/gi, "");
-        text = text.replace(/aria-hidden="[^"]*"/gi, "");
-        text = text.replace(/title="[^"]*"/gi, "");
-        text = text.replace(/&gt;/g, ">");
-        text = text.replace(/&lt;/g, "<");
+        // Fenced code blocks (```...```)
+        text = text.replace(/```[\s\S]*?```/g, (match) => {
+            protectedBlocks.push(match);
+            return `__PROTECTED_${protectedBlocks.length - 1}__`;
+        });
 
-        // 3. KaTeX xatolarini tozalash
+        // Inline code (`...`)
+        text = text.replace(/`[^`]+`/g, (match) => {
+            protectedBlocks.push(match);
+            return `__PROTECTED_${protectedBlocks.length - 1}__`;
+        });
+
+        // Jadvallarni himoya qilish (| bilan boshlanadigan qatorlar)
+        text = text.replace(/(\|[^\n]+\|(\n|$))+/g, (match) => {
+            protectedBlocks.push(match);
+            return `__PROTECTED_${protectedBlocks.length - 1}__`;
+        });
+
+        // 1. KaTeX xatolarini tozalash
         text = text.replace(/\\?[′'`]?inmathmodeatposition[^′'`\s\n"<]*/gi, "");
         text = text.replace(
             /in\s*math\s*mode\s*at\s*position\s*\d+[^\n"<]*/gi,
@@ -51,18 +53,29 @@ const MarkdownRenderer = ({ content, isStreaming = false }) => {
         );
         text = text.replace(/Can't use function[^\n"<]*/gi, "");
 
-        // 4. Buzilgan belgilarni tozalash
+        // 2. Buzilgan KaTeX HTML teglarini tozalash
+        text = text.replace(
+            /<span[^>]*class="katex-error"[^>]*>[^<]*<\/span>/gi,
+            ""
+        );
+        text = text.replace(
+            /<span[^>]*style="color:#cc0000"[^>]*>[^<]*<\/span>/gi,
+            ""
+        );
+
+        // 3. Buzilgan belgilarni tozalash
         text = text.replace(/\\̲/g, "\\");
         text = text.replace(/−/g, "-");
-        text = text.replace(/[′`]/g, "");
 
-        // 5. Takroriy matnlarni tozalash
+        // 4. Takroriy matnlarni tozalash
         text = text.replace(/(\d+\.\s*\*\*[^*]+\*\*[^0-9]*?)(\1)+/gi, "$1");
         text = text.replace(/([a-zA-Z]\([^)]+\))\1+/g, "$1");
         text = text.replace(/([A-Z]{1,3}=[A-Z]{1,3})\1+/g, "$1");
-        text = text.replace(/(\d)\1{2,}/g, "$1");
-        text = text.replace(/\s{3,}/g, " ");
-        text = text.replace(/\n{3,}/g, "\n\n");
+
+        // Himoyalangan bloklarni qaytarish
+        protectedBlocks.forEach((block, i) => {
+            text = text.replace(`__PROTECTED_${i}__`, block);
+        });
 
         return text;
     };
@@ -70,6 +83,27 @@ const MarkdownRenderer = ({ content, isStreaming = false }) => {
     // Matematik formulalarni KaTeX bilan render qilish (string sifatida)
     const renderMathInText = (text) => {
         if (!text) return text;
+
+        // Himoyalangan bloklar (code va jadvallar)
+        const protectedBlocks = [];
+
+        // Fenced code blocks (```...```)
+        text = text.replace(/```[\s\S]*?```/g, (match) => {
+            protectedBlocks.push(match);
+            return `__MATH_PROTECTED_${protectedBlocks.length - 1}__`;
+        });
+
+        // Inline code (`...`)
+        text = text.replace(/`[^`]+`/g, (match) => {
+            protectedBlocks.push(match);
+            return `__MATH_PROTECTED_${protectedBlocks.length - 1}__`;
+        });
+
+        // Jadvallarni himoya qilish (| bilan boshlanadigan qatorlar)
+        text = text.replace(/(\|[^\n]+\|(\n|$))+/g, (match) => {
+            protectedBlocks.push(match);
+            return `__MATH_PROTECTED_${protectedBlocks.length - 1}__`;
+        });
 
         // Display math: $$ ... $$ yoki \[ ... \]
         text = text.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
@@ -121,6 +155,11 @@ const MarkdownRenderer = ({ content, isStreaming = false }) => {
             }
         });
 
+        // Himoyalangan bloklarni qaytarish
+        protectedBlocks.forEach((block, i) => {
+            text = text.replace(`__MATH_PROTECTED_${i}__`, block);
+        });
+
         return text;
     };
 
@@ -162,10 +201,22 @@ const MarkdownRenderer = ({ content, isStreaming = false }) => {
                 cleanedContent = renderMathInText(cleanedContent);
             }
 
-            // 3. Markdown ni HTML ga aylantirish
+            // 3. Markdown ni HTML ga aylantirish (code highlighting bilan)
             marked.setOptions({
                 breaks: true,
                 gfm: true,
+                highlight: function (code, lang) {
+                    if (lang && hljs.getLanguage(lang)) {
+                        try {
+                            return hljs.highlight(code, { language: lang })
+                                .value;
+                        } catch (e) {
+                            return code;
+                        }
+                    }
+                    return hljs.highlightAuto(code).value;
+                },
+                langPrefix: "hljs language-",
             });
 
             return marked.parse(cleanedContent);

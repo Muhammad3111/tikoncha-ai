@@ -127,11 +127,41 @@
     }
 }
 
-/* Table responsive wrapper */
+/* Table styling */
+.markdown-container table,
 .markdown-content table {
-    display: block;
-    max-width: 100%;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
     overflow-x: auto;
+    display: block;
+}
+
+.markdown-container th,
+.markdown-container td,
+.markdown-content th,
+.markdown-content td {
+    border: 1px solid var(--text-secondary, #6b7280);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+}
+
+.markdown-container th,
+.markdown-content th {
+    background-color: var(--text-input-color, #374151);
+    font-weight: 600;
+}
+
+.markdown-container tr:nth-child(even),
+.markdown-content tr:nth-child(even) {
+    background-color: var(--text-input-color, #1f2937);
+}
+
+.markdown-container tbody,
+.markdown-content tbody {
+    display: table;
+    width: 100%;
 }
 
 /* Ensure body takes full height */
