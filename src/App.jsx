@@ -100,10 +100,12 @@ function App() {
 
     return (
         <div
-            className="h-screen flex flex-col"
+            className="h-screen flex flex-col overflow-hidden"
             style={{
                 backgroundColor: "var(--background-color)",
                 color: "var(--text-color)",
+                minHeight: "100vh",
+                maxHeight: "100vh",
             }}
         >
             {/* Header */}

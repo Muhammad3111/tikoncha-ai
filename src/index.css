@@ -2,40 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom scrollbar */
+/* Custom scrollbar - Dark theme (default) */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #1f2937;
+    background: var(--scrollbar-track, #2d2d2d);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #4b5563;
+    background: var(--scrollbar-thumb, #4b5563);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #6b7280;
+    background: var(--scrollbar-thumb-hover, #6b7280);
+}
+
+/* Light theme scrollbar */
+[data-theme="light"] ::-webkit-scrollbar-track,
+:root[data-theme="light"] ::-webkit-scrollbar-track {
+    background: #e5e7eb;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb,
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: #c4c7cc;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover,
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
 
 /* Animations */
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(10px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
 
 .animate-fadeIn {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.2s ease-out;
 }
 
 /* Markdown content styling */
@@ -60,53 +74,35 @@
     color: inherit;
 }
 
-/* KaTeX math styling */
+/* KaTeX math styling - ChatGPT style */
 .katex {
-    font-size: 1.1em;
-    color: #eeeeee !important;
-}
-
-/* Inline math */
-.math.math-inline {
-    display: inline;
-    margin: 0 0.2em;
-}
-
-.math.math-inline .katex {
-    font-size: 1em;
-}
-
-/* Display math */
-.math.math-display {
-    display: block;
-    margin: 1rem 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 0.5rem 0;
+    font-size: 1.2em;
+    color: var(--text-color) !important;
+    font-weight: 400;
 }
 
 .katex-display {
-    margin: 1rem 0;
+    display: block;
+    margin: 1.5rem 0;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 0.5rem 0;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+.katex-display > .katex {
+    font-size: 1.3em;
 }
 
 .katex-html {
-    color: #eeeeee !important;
+    color: var(--text-color) !important;
 }
 
-/* Math delimiters */
-.markdown-content .math {
-    overflow-x: auto;
-    overflow-y: hidden;
-}
-
-/* Inline code vs inline math */
-.markdown-content code.language-math {
-    background: transparent !important;
-    color: #eeeeee !important;
-    padding: 0 !important;
+/* Math error styling */
+.math-error {
+    color: var(--text-color);
+    font-family: "Times New Roman", serif;
+    font-style: italic;
 }
 
 /* Code highlighting adjustments */
@@ -143,9 +139,18 @@ html,
 body,
 #root {
     height: 100%;
+    min-height: 100vh;
+    max-height: 100vh;
     margin: 0;
     padding: 0;
     overflow: hidden;
+}
+
+/* Prevent layout shift during streaming */
+.markdown-container {
+    min-height: 1em;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 /* Smooth transitions */
@@ -191,4 +196,37 @@ textarea:focus-visible {
 
 .animate-pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: transparent;
+    color: #888;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: 0.2s;
+}
+
+.copy-btn:hover {
+    opacity: 1;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+pre {
+    position: relative;
+    margin: 10px 0;
+    padding: 8px;
+    background: #282c34;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.katex-display {
+    overflow-x: auto;
+    padding: 8px 0;
+    margin: 1em 0;
 }

@@ -1,253 +1,210 @@
-import React, { useState, useEffect, useRef } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
-import rehypeHighlight from "rehype-highlight";
-import { Copy, Check } from "lucide-react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { useApp } from "../context/AppContext";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/atom-one-dark.css";
+import { marked } from "marked";
+import hljs from "highlight.js";
+import katex from "katex";
 
-const CodeBlock = ({ language, children }) => {
-    const [copied, setCopied] = useState(false);
+// Window obyektiga qo'shish
+if (typeof window !== "undefined") {
+    window.marked = marked;
+    window.hljs = hljs;
+}
 
-    const handleCopy = () => {
-        const code = String(children).replace(/\n$/, "");
-        navigator.clipboard.writeText(code);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+const MarkdownRenderer = ({ content, isStreaming = false }) => {
+    const containerRef = useRef(null);
+    const { isDark } = useApp();
+
+    // Buzilgan KaTeX HTML teglarini tozalash
+    const cleanBrokenKatex = (text) => {
+        if (!text) return text;
+
+        // 1. Barcha HTML teglarini tozalash
+        text = text.replace(/<span[^>]*>([^<]*)<\/span>/gi, "$1");
+        text = text.replace(/<\/?span[^>]*>/gi, "");
+        text = text.replace(/<\/?math[^>]*>/gi, "");
+        text = text.replace(/<\/?annotation[^>]*>/gi, "");
+        text = text.replace(/<\/?semantics[^>]*>/gi, "");
+        text = text.replace(/<\/?mrow[^>]*>/gi, "");
+        text = text.replace(/<\/?mi[^>]*>/gi, "");
+        text = text.replace(/<\/?mo[^>]*>/gi, "");
+        text = text.replace(/<\/?mn[^>]*>/gi, "");
+
+        // 2. HTML attributlarini tozalash
+        text = text.replace(/style="[^"]*"/gi, "");
+        text = text.replace(/class="[^"]*"/gi, "");
+        text = text.replace(/aria-hidden="[^"]*"/gi, "");
+        text = text.replace(/title="[^"]*"/gi, "");
+        text = text.replace(/&gt;/g, ">");
+        text = text.replace(/&lt;/g, "<");
+
+        // 3. KaTeX xatolarini tozalash
+        text = text.replace(/\\?[′'`]?inmathmodeatposition[^′'`\s\n"<]*/gi, "");
+        text = text.replace(
+            /in\s*math\s*mode\s*at\s*position\s*\d+[^\n"<]*/gi,
+            ""
+        );
+        text = text.replace(
+            /ParseError:\s*KaTeX\s*parse\s*error:[^\n"<]*/gi,
+            ""
+        );
+        text = text.replace(/Can't use function[^\n"<]*/gi, "");
+
+        // 4. Buzilgan belgilarni tozalash
+        text = text.replace(/\\̲/g, "\\");
+        text = text.replace(/−/g, "-");
+        text = text.replace(/[′`]/g, "");
+
+        // 5. Takroriy matnlarni tozalash
+        text = text.replace(/(\d+\.\s*\*\*[^*]+\*\*[^0-9]*?)(\1)+/gi, "$1");
+        text = text.replace(/([a-zA-Z]\([^)]+\))\1+/g, "$1");
+        text = text.replace(/([A-Z]{1,3}=[A-Z]{1,3})\1+/g, "$1");
+        text = text.replace(/(\d)\1{2,}/g, "$1");
+        text = text.replace(/\s{3,}/g, " ");
+        text = text.replace(/\n{3,}/g, "\n\n");
+
+        return text;
     };
 
-    return (
-        <div className="relative my-2.5 group">
-            <button
-                onClick={handleCopy}
-                className="absolute top-2 right-2 bg-transparent text-gray-400 hover:text-white hover:bg-white/10 border-none p-1 cursor-pointer opacity-60 hover:opacity-100 transition-all rounded z-10 flex items-center justify-center"
-                title="Copy code"
-            >
-                {copied ? (
-                    <Check className="w-4.5 h-4.5 text-green-400" />
-                ) : (
-                    <Copy className="w-4.5 h-4.5" />
-                )}
-            </button>
-            <pre className="!bg-[#282c34] !m-0 !p-2 !rounded-lg border border-gray-600/30 relative overflow-hidden">
-                <code
-                    className={`hljs language-${language} !block !p-4 !pt-8 !overflow-x-auto !font-mono !text-sm !leading-relaxed !text-[#abb2bf]`}
-                >
-                    {children}
-                </code>
-            </pre>
-        </div>
-    );
-};
+    // Matematik formulalarni KaTeX bilan render qilish (string sifatida)
+    const renderMathInText = (text) => {
+        if (!text) return text;
 
-const MarkdownRenderer = ({ content }) => {
-    const { isDark } = useApp();
+        // Display math: $$ ... $$ yoki \[ ... \]
+        text = text.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+            try {
+                return katex.renderToString(math.trim(), {
+                    displayMode: true,
+                    throwOnError: false,
+                    output: "html",
+                });
+            } catch (e) {
+                return `<span class="math-error">${math}</span>`;
+            }
+        });
+
+        text = text.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => {
+            try {
+                return katex.renderToString(math.trim(), {
+                    displayMode: true,
+                    throwOnError: false,
+                    output: "html",
+                });
+            } catch (e) {
+                return `<span class="math-error">${math}</span>`;
+            }
+        });
+
+        // Inline math: $ ... $ yoki \( ... \)
+        text = text.replace(/\$([^\n\r$]+?)\$/g, (match, math) => {
+            try {
+                return katex.renderToString(math.trim(), {
+                    displayMode: false,
+                    throwOnError: false,
+                    output: "html",
+                });
+            } catch (e) {
+                return `<span class="math-error">${math}</span>`;
+            }
+        });
+
+        text = text.replace(/\\\(([^\n\r]+?)\\\)/g, (match, math) => {
+            try {
+                return katex.renderToString(math.trim(), {
+                    displayMode: false,
+                    throwOnError: false,
+                    output: "html",
+                });
+            } catch (e) {
+                return `<span class="math-error">${math}</span>`;
+            }
+        });
+
+        return text;
+    };
+
+    const addCopyButtons = () => {
+        const preBlocks = containerRef.current?.querySelectorAll("pre");
+        preBlocks?.forEach((pre) => {
+            if (pre.querySelector(".copy-btn")) return;
+
+            const btn = document.createElement("button");
+            btn.className = "copy-btn";
+            btn.innerHTML =
+                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+
+            btn.onclick = () => {
+                const code = pre.querySelector("code")?.innerText ?? "";
+                navigator.clipboard.writeText(code);
+                btn.innerHTML =
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>';
+                setTimeout(() => {
+                    btn.innerHTML =
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+                }, 1500);
+            };
+
+            pre.appendChild(btn);
+        });
+    };
+
+    // HTML ni hisoblash
+    const renderedHtml = useMemo(() => {
+        if (!content) return "";
+
+        try {
+            // 1. Buzilgan KaTeX ni tozalash
+            let cleanedContent = cleanBrokenKatex(content);
+
+            // 2. Streaming paytida KaTeX render qilmaslik
+            if (!isStreaming) {
+                cleanedContent = renderMathInText(cleanedContent);
+            }
+
+            // 3. Markdown ni HTML ga aylantirish
+            marked.setOptions({
+                breaks: true,
+                gfm: true,
+            });
+
+            return marked.parse(cleanedContent);
+        } catch (error) {
+            console.error("MarkdownRenderer error:", error);
+            return content;
+        }
+    }, [content, isStreaming]);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        el.innerHTML = renderedHtml;
+
+        // Code highlighting
+        el.querySelectorAll("pre code").forEach((block) => {
+            hljs.highlightElement(block);
+        });
+
+        addCopyButtons();
+
+        document.documentElement.setAttribute(
+            "data-theme",
+            isDark ? "dark" : "light"
+        );
+    }, [renderedHtml, isDark]);
 
     return (
         <div
-            className="markdown-content prose prose-sm sm:prose max-w-none"
-            style={{ color: "var(--text-color)" }}
-        >
-            <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[
-                    [
-                        rehypeKatex,
-                        {
-                            strict: false,
-                            trust: true,
-                            throwOnError: false,
-                        },
-                    ],
-                    [rehypeHighlight, { ignoreMissing: true }],
-                ]}
-                components={{
-                    // Code blocks
-                    code({ node, inline, className, children, ...props }) {
-                        const match = /language-(\w+)/.exec(className || "");
-
-                        if (!inline && match) {
-                            return (
-                                <CodeBlock language={match[1]}>
-                                    {children}
-                                </CodeBlock>
-                            );
-                        }
-
-                        return (
-                            <code
-                                className="bg-gray-800/15 text-[#e06c75] px-1.5 py-1 rounded font-mono text-[0.9em]"
-                                {...props}
-                            >
-                                {children}
-                            </code>
-                        );
-                    },
-
-                    // Tables
-                    table({ children }) {
-                        return (
-                            <div className="overflow-x-auto my-6">
-                                <table className="border-collapse w-full text-[0.95em]">
-                                    {children}
-                                </table>
-                            </div>
-                        );
-                    },
-
-                    thead({ children }) {
-                        return <thead>{children}</thead>;
-                    },
-
-                    tbody({ children }) {
-                        return <tbody>{children}</tbody>;
-                    },
-
-                    tr({ children, ...props }) {
-                        return (
-                            <tr
-                                className="even:bg-[#1a1a1a] hover:bg-[#222]"
-                                {...props}
-                            >
-                                {children}
-                            </tr>
-                        );
-                    },
-
-                    th({ children }) {
-                        return (
-                            <th className="border border-[#444] px-3.5 py-2.5 text-left bg-[#333] font-semibold text-white">
-                                {children}
-                            </th>
-                        );
-                    },
-
-                    td({ children }) {
-                        return (
-                            <td className="border border-[#444] px-3.5 py-2.5 text-left">
-                                {children}
-                            </td>
-                        );
-                    },
-
-                    // Headings
-                    h1({ children }) {
-                        return (
-                            <h1 className="text-2xl font-semibold mt-6 mb-2 text-white">
-                                {children}
-                            </h1>
-                        );
-                    },
-
-                    h2({ children }) {
-                        return (
-                            <h2 className="text-xl font-semibold mt-6 mb-2 pb-1.5 border-b border-[#444] text-white">
-                                {children}
-                            </h2>
-                        );
-                    },
-
-                    h3({ children }) {
-                        return (
-                            <h3 className="text-lg font-semibold mt-6 mb-2 pb-1.5 border-b border-[#444] text-white">
-                                {children}
-                            </h3>
-                        );
-                    },
-
-                    // Paragraphs
-                    p({ children }) {
-                        return (
-                            <p className="mb-1 leading-relaxed">{children}</p>
-                        );
-                    },
-
-                    // Lists
-                    ul({ children }) {
-                        return (
-                            <ul className="list-disc list-inside mb-3 space-y-1 text-gray-200">
-                                {children}
-                            </ul>
-                        );
-                    },
-
-                    ol({ children }) {
-                        return (
-                            <ol className="list-decimal list-inside mb-3 space-y-1 text-gray-200">
-                                {children}
-                            </ol>
-                        );
-                    },
-
-                    li({ children }) {
-                        return <li className="ml-4">{children}</li>;
-                    },
-
-                    // Blockquotes
-                    blockquote({ children }) {
-                        return (
-                            <blockquote
-                                className="border-l-4 pl-4 py-2 my-4"
-                                style={{
-                                    borderColor: isDark ? "#444" : "#ccc",
-                                    color: "var(--text-secondary)",
-                                }}
-                            >
-                                {children}
-                            </blockquote>
-                        );
-                    },
-
-                    // Links
-                    a({ href, children }) {
-                        return (
-                            <a
-                                href={href}
-                                className="text-[#58a6ff] hover:underline no-underline"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                {children}
-                            </a>
-                        );
-                    },
-
-                    // Horizontal rule
-                    hr() {
-                        return <hr className="my-6 border-gray-700" />;
-                    },
-
-                    // Strong/Bold
-                    strong({ children }) {
-                        return (
-                            <strong
-                                className="font-bold"
-                                style={{ color: "var(--text-color)" }}
-                            >
-                                {children}
-                            </strong>
-                        );
-                    },
-
-                    // Emphasis/Italic
-                    em({ children }) {
-                        return (
-                            <em
-                                className="italic"
-                                style={{ color: "var(--text-secondary)" }}
-                            >
-                                {children}
-                            </em>
-                        );
-                    },
-                }}
-            >
-                {content}
-            </ReactMarkdown>
-        </div>
+            ref={containerRef}
+            className="markdown-container prose prose-lg max-w-none break-words"
+            style={{
+                color: "var(--text-color)",
+                minHeight: "1.5em",
+                fontSize: "1rem",
+                lineHeight: "1.75",
+            }}
+        />
     );
 };
 

@@ -10,20 +10,20 @@ const Message = ({ message, isStreaming = false, isOwn = false }) => {
         <div
             className={`flex ${
                 isOwn ? "justify-end" : "justify-start"
-            } mb-4 px-4 animate-fadeIn`}
+            } mb-4 px-4 ${!isStreaming ? "animate-fadeIn" : ""}`}
         >
             <div
                 className={`${
                     isOwn
                         ? "max-w-[85%] sm:max-w-[75%] md:max-w-[65%] order-2"
-                        : "w-full order-1"
+                        : "max-w-full order-1"
                 }`}
             >
                 {/* Message bubble */}
                 <div
-                    className={`rounded-2xl shadow-lg ${
+                    className={`rounded-2xl ${
                         isOwn
-                            ? "rounded-br-sm px-3 py-2"
+                            ? "rounded-br-sm px-3 py-2 shadow-lg"
                             : "rounded-bl-sm !bg-transparent"
                     }`}
                     style={{
@@ -31,17 +31,24 @@ const Message = ({ message, isStreaming = false, isOwn = false }) => {
                         color: "var(--text-color)",
                     }}
                 >
-                    <div>
+                    <div className="min-w-0 w-full">
                         {isStreaming ? (
-                            <div className="flex items-start gap-2">
-                                <MarkdownRenderer content={message.text} />
-                                <div className="mt-1 flex-shrink-0">
-                                    <div className="w-1.5 h-4 bg-white/70 animate-pulse rounded" />
+                            <div className="w-full">
+                                <MarkdownRenderer
+                                    content={message.text}
+                                    isStreaming={true}
+                                />
+                                <div className="mt-2 flex items-center gap-2">
+                                    <div className="w-1.5 h-4 bg-green-500/70 animate-pulse rounded" />
+                                    <span className="text-xs text-green-500/70">
+                                        Yozilmoqda...
+                                    </span>
                                 </div>
                             </div>
                         ) : (
                             <MarkdownRenderer
                                 content={message.text || message}
+                                isStreaming={false}
                             />
                         )}
 

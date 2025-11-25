@@ -24,8 +24,16 @@ const ChatHeader = ({
 
     return (
         <div
-            className="border-b border-gray-700 px-4 py-3 rounded-b-[10px] shadow-sm shadow-white/10"
-            style={{ backgroundColor: "var(--background-color)" }}
+            className="px-4 py-3 rounded-b-[10px]"
+            style={{
+                backgroundColor: "var(--background-color)",
+                borderBottom: isDark
+                    ? "1px solid #374151"
+                    : "1px solid #e5e7eb",
+                boxShadow: isDark
+                    ? "0 2px 4px rgba(0, 0, 0, 0.3)"
+                    : "0 2px 4px rgba(0, 0, 0, 0.08)",
+            }}
         >
             <div className="max-w-4xl mx-auto flex items-center gap-3">
                 {/* Back button */}

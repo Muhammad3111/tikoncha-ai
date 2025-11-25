@@ -83,12 +83,52 @@ export const useWebSocket = (token) => {
 
             // User xabari uchun loading o'chirish
             if (message.is_mine) {
-                setIsSending(false);
-                pendingMessageIdRef.current = null;
+                // User xabari kelganda loading o'chirmaydi, bot javob berguncha kutadi
+                console.log(
+                    "👤 User message received, keeping loading until bot responds"
+                );
+            } else {
+                // Bot xabari kelganda loading o'chirish - lekin stream tugaguncha kutish
+                console.log(
+                    "🤖 Bot message received, but waiting for stream to finish"
+                );
 
-                if (sendTimeoutRef.current) {
-                    clearTimeout(sendTimeoutRef.current);
-                    sendTimeoutRef.current = null;
+                // Agar stream bo'layotgan bo'lsa, stream tugaguncha kutish
+                if (isStreamingRef.current) {
+                    console.log("   Stream is active, delaying loading stop");
+                    // Stream tugaganida loading o'chirish uchun timeout o'rnatish
+                    if (streamTimeoutRef.current) {
+                        clearTimeout(streamTimeoutRef.current);
+                    }
+                    streamTimeoutRef.current = setTimeout(() => {
+                        console.log(
+                            "   Stream timeout reached, stopping loading"
+                        );
+                        setIsSending(false);
+                        pendingMessageIdRef.current = null;
+
+                        if (sendTimeoutRef.current) {
+                            clearTimeout(sendTimeoutRef.current);
+                            sendTimeoutRef.current = null;
+                        }
+
+                        // Stream ni tozalash
+                        streamBufferRef.current = "";
+                        setStreamingMessage(null);
+                        isStreamingRef.current = false;
+                    }, 2000); // 2 sekund kutish - UI animation tugaguncha
+                } else {
+                    // Agar stream yo'q bo'lsa, darhol loading o'chirish
+                    console.log(
+                        "   No active stream, stopping loading immediately"
+                    );
+                    setIsSending(false);
+                    pendingMessageIdRef.current = null;
+
+                    if (sendTimeoutRef.current) {
+                        clearTimeout(sendTimeoutRef.current);
+                        sendTimeoutRef.current = null;
+                    }
                 }
             }
         };
@@ -100,9 +140,13 @@ export const useWebSocket = (token) => {
 
             // Agar yangi streaming boshlanayotgan bo'lsa, bufferni tozalash
             if (!isStreamingRef.current) {
-                console.log("🆕 New stream started, clearing buffer");
+                console.log(
+                    "🆕 New stream started, clearing buffer but keeping loading"
+                );
                 streamBufferRef.current = "";
                 isStreamingRef.current = true;
+
+                // Stream boshlanganida loading o'chirmaydi, faqat final message kelganda o'chadi
             }
 
             // Deltani bufferga qo'shish

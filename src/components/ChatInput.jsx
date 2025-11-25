@@ -11,13 +11,21 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
         e.preventDefault();
         if (message.trim() && !isSending && !disabled) {
             onSend(message);
+            // Message ni darhol tozalamaymiz, loading tugaganida tozalanadi
+        }
+    };
+
+    // Loading tugaganda message ni tozalash
+    useEffect(() => {
+        if (!isSending && message.trim()) {
+            // Agar loading tugagan bo'lsa va message bor bo'lsa, tozalash
             setMessage("");
             // Reset textarea height
             if (textareaRef.current) {
                 textareaRef.current.style.height = "auto";
             }
         }
-    };
+    }, [isSending]);
 
     const handleKeyDown = (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -78,15 +86,15 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
                             }}
                         />
 
-                        {/* Send button (o'ng tomonda, input ichida, faqat matn bo'lganda) */}
-                        {hasMessage && (
+                        {/* Send button (faqat message bor bo'lganda yoki loading paytida) */}
+                        {(hasMessage || isSending) && (
                             <button
                                 type="submit"
-                                disabled={isSending || disabled}
+                                disabled={!hasMessage || disabled}
                                 className="flex-shrink-0 w-6 h-6 rounded-lg bg-green-600 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg focus:outline-none"
                             >
                                 {isSending ? (
-                                    <Loader2 className="w-5 h-5 text-white animate-spin" />
+                                    <Loader2 className="w-4 h-4 text-white animate-spin" />
                                 ) : (
                                     <ArrowUp className="w-4 h-4 text-white" />
                                 )}

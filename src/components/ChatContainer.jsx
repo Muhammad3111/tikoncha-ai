@@ -10,20 +10,55 @@ const ChatContainer = ({
 }) => {
     const messagesEndRef = useRef(null);
     const containerRef = useRef(null);
+    const isInitialLoadRef = useRef(true);
+    const prevMessagesLengthRef = useRef(0);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Scroll to bottom - instant for initial load, smooth for new messages
+    const scrollToBottom = (instant = false) => {
+        if (instant) {
+            // Darhol eng oxiriga o'tish (scroll animatsiyasiz)
+            messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+        } else {
+            // Yangi xabarlar uchun smooth scroll
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
     };
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages, streamingMessage]);
+        // Birinchi marta yuklanganda yoki history yuklanganda - darhol oxiriga
+        if (isInitialLoadRef.current && messages.length > 0) {
+            // Kichik delay - DOM to'liq renderlanishi uchun
+            setTimeout(() => {
+                scrollToBottom(true); // instant scroll
+            }, 50);
+            isInitialLoadRef.current = false;
+            prevMessagesLengthRef.current = messages.length;
+            return;
+        }
+
+        // Yangi xabar qo'shilganda - smooth scroll
+        if (messages.length > prevMessagesLengthRef.current) {
+            scrollToBottom(false); // smooth scroll
+        }
+        prevMessagesLengthRef.current = messages.length;
+    }, [messages]);
+
+    // Streaming paytida smooth scroll
+    useEffect(() => {
+        if (streamingMessage) {
+            scrollToBottom(false);
+        }
+    }, [streamingMessage]);
 
     return (
         <div
             ref={containerRef}
-            className="flex-1 overflow-y-auto py-4 pb-32"
-            style={{ backgroundColor: "var(--background-color)" }}
+            className="flex-1 overflow-y-auto py-4 pb-32 min-h-0"
+            style={{
+                backgroundColor: "var(--background-color)",
+                flexShrink: 1,
+                flexGrow: 1,
+            }}
         >
             <div className="max-w-4xl mx-auto">
                 {/* History loading indicator */}
