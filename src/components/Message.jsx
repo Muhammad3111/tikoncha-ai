@@ -1,11 +1,8 @@
-import React from "react";
 import { Loader2 } from "lucide-react";
 import MarkdownRenderer from "./MarkdownRenderer";
-import { useApp } from "../context/AppContext";
 
 const Message = ({ message, isStreaming = false, isOwn = false }) => {
     const isLoading = message?.isLoading || false;
-    const { isDark } = useApp();
     return (
         <div
             className={`flex ${

@@ -14,7 +14,6 @@ function App() {
         isConnecting,
         messages,
         streamingMessage,
-        error,
         isSending,
         sendMessage,
         setInitialMessages,
@@ -71,7 +70,7 @@ function App() {
             <div
                 className="h-screen flex items-center justify-center"
                 style={{
-                    backgroundColor: "var(--background-color)",
+                    backgroundColor: `${isDark ? "#010D01" : "#F5F7F5"}`,
                     color: "var(--text-color)",
                 }}
             >
