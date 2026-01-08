@@ -69,10 +69,10 @@ const ChatHeader = ({
                     <p
                         className={`text-xs ${
                             isConnecting
-                                ? "text-yellow-500"
+                                ? "text-green-500"
                                 : isConnected
                                 ? "text-green-500"
-                                : "text-red-500"
+                                : "text-green-500"
                         }`}
                     >
                         {isConnecting
