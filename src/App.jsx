@@ -24,14 +24,6 @@ function App() {
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [historyLoaded, setHistoryLoaded] = useState(false);
 
-    console.log("💬 Current Chat ID:", chatId);
-    console.log("🎨 Theme:", isDark ? "dark" : "light");
-    console.log("🔑 Token:", token ? "Set" : "Not set");
-    console.log("📱 App Ready:", isReady);
-    console.log("📊 History Loaded:", historyLoaded);
-    console.log("⏳ Loading History:", isLoadingHistory);
-    console.log("📝 Messages Count:", messages.length);
-
     // Chat history ni yuklash
     const loadChatHistory = useCallback(async () => {
         if (!token || !chatId || isLoadingHistory) {
@@ -40,7 +32,6 @@ function App() {
 
         setIsLoadingHistory(true);
         try {
-            console.log("📋 Loading chat history for:", chatId);
             const response = await getChatHistory(chatId, token, 50);
 
             if (response.success && response.data && response.data.items) {
@@ -69,7 +60,6 @@ function App() {
     // Token va chatId tayyor bo'lganda history ni yuklash
     useEffect(() => {
         if (isReady && token && chatId && !isLoadingHistory) {
-            console.log("🔄 Starting to load chat history...");
             loadChatHistory();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -33,7 +33,6 @@ class WebSocketService {
                 this.ws = new WebSocket(url);
 
                 this.ws.onopen = () => {
-                    console.log("WebSocket connected");
                     this.isConnected = true;
                     this.reconnectAttempts = 0;
                     this.startPing();
@@ -44,11 +43,8 @@ class WebSocketService {
                 this.ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
-                        console.log("📨 Received:", data);
-
                         // Emit event based on type
                         if (data.type) {
-                            console.log(`🎯 Emitting event: ${data.type}`);
                             this.emit(data.type, data);
                         }
 
@@ -66,11 +62,6 @@ class WebSocketService {
                 };
 
                 this.ws.onclose = (event) => {
-                    console.log("WebSocket disconnected", {
-                        code: event.code,
-                        reason: event.reason,
-                        wasClean: event.wasClean,
-                    });
                     this.isConnected = false;
                     this.stopPing();
                     this.emit("connection_status", { connected: false });
@@ -90,9 +81,6 @@ class WebSocketService {
 
     reconnect(token) {
         this.reconnectAttempts++;
-        console.log(
-            `Reconnecting... Attempt ${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`
-        );
 
         setTimeout(() => {
             this.connect(token).catch(console.error);

@@ -22,11 +22,8 @@ export const useWebSocket = (token) => {
             return;
         }
 
-        console.log("🔄 useWebSocket effect running");
-
         // Connection status listener
         const handleConnectionStatus = ({ connected }) => {
-            console.log("📡 Connection status changed:", connected);
             setIsConnected(connected);
             setIsConnecting(false); // Stop connecting when status changes
             if (!connected) {
@@ -136,13 +133,9 @@ export const useWebSocket = (token) => {
         // Message stream listener (bot responses)
         const handleMessageStream = ({ data }) => {
             const delta = data.delta;
-            console.log("📥 Stream delta:", delta);
 
             // Agar yangi streaming boshlanayotgan bo'lsa, bufferni tozalash
             if (!isStreamingRef.current) {
-                console.log(
-                    "🆕 New stream started, clearing buffer but keeping loading"
-                );
                 streamBufferRef.current = "";
                 isStreamingRef.current = true;
 

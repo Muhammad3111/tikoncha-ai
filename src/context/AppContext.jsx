@@ -11,18 +11,18 @@ export const useApp = () => {
 };
 
 export const AppProvider = ({ children }) => {
-    const [token, setToken] = useState(null);
-    const [chatId, setChatId] = useState(null);
+    const [token, setToken] = useState(
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Njc4NzQzMDMsInN1YiI6IjExZjVlNWZiLTQyYmMtNDViZS04ZTdmLWRlZmUyYWY4NGQ4YiIsInR5cGUiOiJhY2Nlc3MifQ.oGAQmmTgXtGSUOwd0f8TMGLhVRICp8aovnYSOnCE9ME"
+    );
+    const [chatId, setChatId] = useState(
+        "36864bd2-59d3-43d0-8c50-cb3ca9a106bb"
+    );
     const [chatTitle, setChatTitle] = useState("Yordamchi Tiparatikon");
     const [theme, setTheme] = useState("light");
     const [fontSize, setFontSize] = useState(14);
-    const [isReady, setIsReady] = useState(false);
+    const [isReady, setIsReady] = useState(true);
 
     useEffect(() => {
-        console.log(
-            "📱 AppContext initialized, waiting for data from mobile app..."
-        );
-
         // URL parametrlarini tekshirish (HTTP headerlar o'rniga)
         const urlParams = new URLSearchParams(window.location.search);
         const urlToken = urlParams.get("token");
@@ -40,11 +40,6 @@ export const AppProvider = ({ children }) => {
                 "Token:",
                 urlToken ? `${urlToken.substring(0, 20)}...` : "Yo'q"
             );
-            console.log("Chat ID:", urlChatId || "Yo'q");
-            console.log("Chat Title:", urlChatTitle || "Yo'q");
-            console.log("Theme:", urlTheme || "Yo'q");
-            console.log("Font Size:", urlFontSize || "Yo'q");
-            console.groupEnd();
 
             // URL parametrlardan state ni yangilash
             if (urlToken) {
@@ -72,25 +67,6 @@ export const AppProvider = ({ children }) => {
                     typeof event.data === "string"
                         ? JSON.parse(event.data)
                         : event.data;
-
-                console.log("📱 Received message from mobile app:", data);
-
-                // Kelgan ma'lumotlarni batafsil console ga chiqarish
-                console.group("🔍 WebView dan kelgan ma'lumotlar:");
-                console.log("Type:", data.type);
-                console.log(
-                    "Token:",
-                    data.token ? `${data.token.substring(0, 20)}...` : "Yo'q"
-                );
-                console.log("Chat ID:", data.chatId || "Yo'q");
-                console.log("Chat Title:", data.chatTitle || "Yo'q");
-                console.log("Theme:", data.theme || "Yo'q");
-                console.log("Font Size:", data.fontSize || "Yo'q");
-                console.log(
-                    "Barcha ma'lumotlar:",
-                    JSON.stringify(data, null, 2)
-                );
-                console.groupEnd();
 
                 // Token
                 if (data.token) {
@@ -136,7 +112,6 @@ export const AppProvider = ({ children }) => {
 
                     // Ma'lumotlar kelganda ready qilish
                     setIsReady(true);
-                    console.log("✅ App initialized with data from mobile app");
                 }
             } catch (error) {
                 console.error("Error parsing message from mobile app:", error);
@@ -193,14 +168,12 @@ export const AppProvider = ({ children }) => {
             root.style.setProperty("--background-color", "#010D01");
             root.style.setProperty("--text-color", "#FFFFFF");
             root.style.setProperty("--text-secondary", "#CCCCCC");
-            console.log("🌙 Dark theme ranglari o'rnatildi");
         } else {
             // Light theme ranglari
             root.style.setProperty("--text-input-color", "#FFFFFF");
             root.style.setProperty("--background-color", "#F5F7F5");
             root.style.setProperty("--text-color", "#000000");
             root.style.setProperty("--text-secondary", "#666666");
-            console.log("☀️ Light theme ranglari o'rnatildi");
         }
     }, [theme]);
 

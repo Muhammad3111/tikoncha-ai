@@ -10,13 +10,9 @@ const BASE_URL = "https://api.tikoncha.uz"; // Tikoncha API base URL
  */
 export const getChatHistory = async (chatId, token, limit = 50) => {
     try {
-        console.log("📋 Loading chat history:", { chatId, limit });
-
         const url = `${BASE_URL}/chat/messages?chat_id=${encodeURIComponent(
             chatId
         )}&limit=${limit}`;
-
-        console.log("🌐 API URL:", url);
 
         const response = await fetch(url, {
             method: "GET",
@@ -33,7 +29,6 @@ export const getChatHistory = async (chatId, token, limit = 50) => {
         }
 
         const data = await response.json();
-        console.log("✅ Chat history loaded:", data);
 
         return data;
     } catch (error) {
@@ -50,12 +45,6 @@ export const getChatHistory = async (chatId, token, limit = 50) => {
 export const formatMessageFromApi = (apiMessage) => {
     // sender_name ga qarab message positioning
     const isBot = apiMessage.sender_name === "bot";
-
-    console.log(
-        `📝 Formatting message: ${apiMessage.sender_name} -> ${
-            isBot ? "Bot (left)" : "User (right)"
-        }`
-    );
 
     return {
         id: apiMessage.id,
