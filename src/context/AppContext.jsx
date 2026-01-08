@@ -11,16 +11,12 @@ export const useApp = () => {
 };
 
 export const AppProvider = ({ children }) => {
-    const [token, setToken] = useState(
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Njc4NzQzMDMsInN1YiI6IjExZjVlNWZiLTQyYmMtNDViZS04ZTdmLWRlZmUyYWY4NGQ4YiIsInR5cGUiOiJhY2Nlc3MifQ.oGAQmmTgXtGSUOwd0f8TMGLhVRICp8aovnYSOnCE9ME"
-    );
-    const [chatId, setChatId] = useState(
-        "36864bd2-59d3-43d0-8c50-cb3ca9a106bb"
-    );
+    const [token, setToken] = useState("");
+    const [chatId, setChatId] = useState("");
     const [chatTitle, setChatTitle] = useState("Yordamchi Tiparatikon");
     const [theme, setTheme] = useState("light");
     const [fontSize, setFontSize] = useState(14);
-    const [isReady, setIsReady] = useState(true);
+    const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
         // URL parametrlarini tekshirish (HTTP headerlar o'rniga)
