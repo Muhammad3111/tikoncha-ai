@@ -14,7 +14,7 @@ export const AppProvider = ({ children }) => {
     const [token, setToken] = useState("");
     const [chatId, setChatId] = useState("");
     const [chatTitle, setChatTitle] = useState("Yordamchi Tiparatikon");
-    const [theme, setTheme] = useState("light");
+    const [theme, setTheme] = useState("dark");
     const [fontSize, setFontSize] = useState(14);
     const [isReady, setIsReady] = useState(false);
 

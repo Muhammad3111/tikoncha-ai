@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useWebSocket } from "./hooks/useWebSocket";
 import { useApp } from "./context/AppContext";
 import { getChatHistory, formatMessagesFromApi } from "./services/chatApi";
 import ChatHeader from "./components/ChatHeader";
 import ChatContainer from "./components/ChatContainer";
 import ChatInput from "./components/ChatInput";
-import ErrorBanner from "./components/ErrorBanner";
 
 function App() {
     const { token, chatId, chatTitle, isDark, isReady } = useApp();
@@ -18,12 +17,10 @@ function App() {
         sendMessage,
         setInitialMessages,
     } = useWebSocket(token);
-
-    const [showError, setShowError] = useState(true);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [historyLoaded, setHistoryLoaded] = useState(false);
 
-    // Chat history ni yuklash
+    // Chat history ni yuklas
     const loadChatHistory = useCallback(async () => {
         if (!token || !chatId || isLoadingHistory) {
             return;
@@ -68,9 +65,10 @@ function App() {
     if (!isReady || !token || !chatId) {
         return (
             <div
-                className="h-screen flex items-center justify-center"
+                className={`h-screen flex items-center justify-center ${
+                    isDark ? "bg-[#010D01]" : "bg-[#F5F7F5]"
+                }`}
                 style={{
-                    backgroundColor: `${isDark ? "#010D01" : "#F5F7F5"}`,
                     color: "var(--text-color)",
                 }}
             >
