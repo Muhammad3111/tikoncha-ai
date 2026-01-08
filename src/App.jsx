@@ -105,14 +105,6 @@ function App() {
                 chatName={chatTitle}
             />
 
-            {/* Error Banner */}
-            {error && showError && (
-                <ErrorBanner
-                    error={error}
-                    onClose={() => setShowError(false)}
-                />
-            )}
-
             {/* Messages Container */}
             <ChatContainer
                 messages={messages}
