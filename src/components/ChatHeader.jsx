@@ -23,7 +23,7 @@ const ChatHeader = ({
     };
 
     return (
-        <div
+        <header
             className="px-4 py-3 rounded-b-[10px]"
             style={{
                 backgroundColor: "var(--background-color)",
@@ -34,6 +34,7 @@ const ChatHeader = ({
                     ? "0 2px 4px rgba(0, 0, 0, 0.3)"
                     : "0 2px 4px rgba(0, 0, 0, 0.08)",
             }}
+            role="banner"
         >
             <div className="max-w-4xl mx-auto flex items-center gap-3">
                 {/* Back button */}
@@ -42,18 +43,24 @@ const ChatHeader = ({
                         isDark ? "bg-[#1F1F1F]" : "bg-[#F3F4F7]"
                     } transition-colors`}
                     onClick={goBack}
+                    aria-label="Orqaga qaytish"
                 >
                     <ArrowLeft
                         className="w-4 h-4"
                         style={{ color: "var(--text-color)" }}
+                        aria-hidden="true"
                     />
                 </button>
 
                 {/* Avatar */}
-                <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                <div
+                    className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0"
+                    role="img"
+                    aria-label="AI avatar"
+                >
                     <img
                         src={aiLogo}
-                        alt="AI Logo"
+                        alt="Yordamchi Tikoratikon AI"
                         className="w-full h-full object-cover"
                     />
                 </div>
@@ -71,19 +78,21 @@ const ChatHeader = ({
                             isConnecting
                                 ? "text-green-500"
                                 : isConnected
-                                ? "text-green-500"
-                                : "text-green-500"
+                                  ? "text-green-500"
+                                  : "text-green-500"
                         }`}
+                        role="status"
+                        aria-live="polite"
                     >
                         {isConnecting
                             ? "Connecting"
                             : isConnected
-                            ? "Online"
-                            : "Disconnected"}
+                              ? "Online"
+                              : "Disconnected"}
                     </p>
                 </div>
             </div>
-        </div>
+        </header>
     );
 };
 

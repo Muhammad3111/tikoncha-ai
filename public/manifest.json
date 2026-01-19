@@ -1,0 +1,14 @@
+{
+    "name": "Tikoncha AI Chat",
+    "short_name": "Tikoncha",
+    "description": "Real-time AI chat ilovasi",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#010D01",
+    "theme_color": "#16a34a",
+    "orientation": "portrait",
+    "icons": [],
+    "categories": ["productivity", "utilities"],
+    "lang": "uz",
+    "dir": "ltr"
+}

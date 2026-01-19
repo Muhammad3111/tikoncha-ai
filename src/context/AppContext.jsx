@@ -29,20 +29,12 @@ export const AppProvider = ({ children }) => {
 
         // Agar URL parametrlar mavjud bo'lsa
         if (urlToken || urlChatId) {
-            console.group(
-                "🔗 URL parametrlardan ma'lumotlar (Header o'rniga):"
-            );
-            console.log(
-                "Token:",
-                urlToken ? `${urlToken.substring(0, 20)}...` : "Yo'q"
-            );
-
             // URL parametrlardan state ni yangilash
             if (urlToken) {
                 setToken(
                     urlToken.startsWith("Bearer ")
                         ? urlToken
-                        : `Bearer ${urlToken}`
+                        : `Bearer ${urlToken}`,
                 );
             }
             if (urlChatId) setChatId(urlChatId);
@@ -51,9 +43,6 @@ export const AppProvider = ({ children }) => {
             if (urlFontSize) setFontSize(parseInt(urlFontSize));
 
             setIsReady(true);
-            console.log(
-                "✅ App initialized with URL parameters (instead of headers)"
-            );
         }
 
         // Mobile appdan postMessage orqali ma'lumotlarni qabul qilish
@@ -69,7 +58,7 @@ export const AppProvider = ({ children }) => {
                     setToken(
                         data.token.startsWith("Bearer ")
                             ? data.token
-                            : `Bearer ${data.token}`
+                            : `Bearer ${data.token}`,
                     );
                 }
 
@@ -99,7 +88,7 @@ export const AppProvider = ({ children }) => {
                         setToken(
                             data.token.startsWith("Bearer ")
                                 ? data.token
-                                : `Bearer ${data.token}`
+                                : `Bearer ${data.token}`,
                         );
                     if (data.chatId) setChatId(data.chatId);
                     if (data.chatTitle) setChatTitle(data.chatTitle);
@@ -123,7 +112,7 @@ export const AppProvider = ({ children }) => {
                 JSON.stringify({
                     type: "ready",
                     message: "WebView is ready",
-                })
+                }),
             );
         }
 
@@ -131,13 +120,6 @@ export const AppProvider = ({ children }) => {
         // 2 soniya kutamiz - agar ma'lumot kelmasa ham ready qilamiz
         const readyTimeout = setTimeout(() => {
             setIsReady(true);
-            if (!token || !chatId) {
-                console.warn(
-                    "⚠️ Ready timeout reached without receiving data from mobile app"
-                );
-            } else {
-                console.log("✅ Ready timeout reached with data");
-            }
         }, 2000);
 
         return () => {
@@ -150,7 +132,7 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         document.documentElement.style.setProperty(
             "--base-font-size",
-            `${fontSize}px`
+            `${fontSize}px`,
         );
     }, [fontSize]);
 

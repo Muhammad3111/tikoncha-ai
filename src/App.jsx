@@ -16,7 +16,7 @@ function App() {
         isSending,
         sendMessage,
         setInitialMessages,
-    } = useWebSocket(token);
+    } = useWebSocket(token, chatId);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [historyLoaded, setHistoryLoaded] = useState(false);
 
@@ -32,22 +32,16 @@ function App() {
 
             if (response.success && response.data && response.data.items) {
                 const formattedMessages = formatMessagesFromApi(
-                    response.data.items
-                );
-                console.log(
-                    "✅ History loaded, messages count:",
-                    formattedMessages.length
+                    response.data.items,
                 );
 
                 // History xabarlarini WebSocket messages ga o'rnatish
                 setInitialMessages(formattedMessages);
 
                 setHistoryLoaded(true);
-            } else {
-                console.warn("⚠️ Invalid history response:", response);
             }
         } catch (error) {
-            console.error("❌ Failed to load chat history:", error);
+            // Silent error handling
         } finally {
             setIsLoadingHistory(false);
         }
@@ -81,7 +75,6 @@ function App() {
     }
 
     const handleSendMessage = (text) => {
-        console.log(" Sending message to chat:", chatId, "Text:", text);
         sendMessage(chatId, text);
     };
 

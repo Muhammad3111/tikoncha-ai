@@ -185,7 +185,9 @@ body,
 
 /* Smooth transitions */
 * {
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
 }
 
 button,
@@ -259,4 +261,22 @@ pre {
     overflow-x: auto;
     padding: 8px 0;
     margin: 1em 0;
+}
+
+/* Virtual scrolling optimizations */
+.virtualized-message-list {
+    will-change: transform;
+    contain: layout style paint;
+}
+
+/* Improve rendering performance for virtualized items */
+.virtualized-row {
+    contain: layout style paint;
+    content-visibility: auto;
+}
+
+/* Smooth scrolling for virtual list */
+.virtual-scroll-container {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
 }

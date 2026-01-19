@@ -4,6 +4,8 @@ import {
     RECONNECT_DELAY,
     MAX_RECONNECT_ATTEMPTS,
 } from "../config";
+import tokenService from "./tokenService";
+import errorReporter from "./errorReporter";
 
 class WebSocketService {
     constructor() {
@@ -13,23 +15,42 @@ class WebSocketService {
         this.pingInterval = null;
         this.isConnected = false;
         this.shouldReconnect = true;
+        this.jwtToken = null;
     }
 
-    connect(token) {
+    async connect(jwtToken) {
         // If already connected, return existing connection
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             console.log("Already connected, reusing connection");
             return Promise.resolve();
         }
 
+        // Store JWT token
+        this.jwtToken = jwtToken;
+
         // Close existing connection if any
         if (this.ws) {
             this.ws.close();
         }
 
+        try {
+            // Initialize token service and get session token
+            console.log("🔐 Getting session token...");
+            await tokenService.initialize(jwtToken);
+            const sessionToken = await tokenService.getSessionToken();
+
+            return this._connectWithSessionToken(sessionToken);
+        } catch (error) {
+            console.error("❌ Failed to get session token:", error);
+            errorReporter.captureError(error, { context: "websocket_connect" });
+            throw error;
+        }
+    }
+
+    _connectWithSessionToken(sessionToken) {
         return new Promise((resolve, reject) => {
             try {
-                const url = getWebSocketUrl(token);
+                const url = getWebSocketUrl(sessionToken);
                 this.ws = new WebSocket(url);
 
                 this.ws.onopen = () => {
@@ -57,6 +78,9 @@ class WebSocketService {
 
                 this.ws.onerror = (error) => {
                     console.error("WebSocket error:", error);
+                    errorReporter.captureError(error, {
+                        context: "websocket_error",
+                    });
                     this.emit("error", error);
                     reject(error);
                 };
@@ -66,11 +90,20 @@ class WebSocketService {
                     this.stopPing();
                     this.emit("connection_status", { connected: false });
 
+                    console.log("WebSocket closed:", event.code, event.reason);
+
+                    // Check if token expired (code 1008 or 4401)
+                    if (event.code === 1008 || event.code === 4401) {
+                        console.log("🔐 Token expired, refreshing...");
+                        this.handleTokenExpired();
+                        return;
+                    }
+
                     if (
                         this.shouldReconnect &&
                         this.reconnectAttempts < MAX_RECONNECT_ATTEMPTS
                     ) {
-                        this.reconnect(token);
+                        this.reconnect();
                     }
                 };
             } catch (error) {
@@ -79,11 +112,31 @@ class WebSocketService {
         });
     }
 
-    reconnect(token) {
-        this.reconnectAttempts++;
+    async handleTokenExpired() {
+        try {
+            console.log("🔄 Refreshing session token...");
+            const newSessionToken = await tokenService.refreshToken();
+            console.log("✅ Session token refreshed, reconnecting...");
+            await this._connectWithSessionToken(newSessionToken);
+        } catch (error) {
+            console.error("❌ Failed to refresh token:", error);
+            errorReporter.captureError(error, { context: "token_refresh" });
+            this.emit("token_expired", { error: error.message });
+        }
+    }
 
-        setTimeout(() => {
-            this.connect(token).catch(console.error);
+    reconnect() {
+        this.reconnectAttempts++;
+        console.log(
+            `🔄 Reconnect attempt ${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`,
+        );
+
+        setTimeout(async () => {
+            try {
+                await this.connect(this.jwtToken);
+            } catch (error) {
+                console.error("Reconnect failed:", error);
+            }
         }, RECONNECT_DELAY);
     }
 
@@ -94,6 +147,7 @@ class WebSocketService {
             this.ws.close();
             this.ws = null;
         }
+        tokenService.clear();
     }
 
     startPing() {
@@ -157,7 +211,7 @@ class WebSocketService {
         text,
         type = "TEXT",
         attachmentUrl = null,
-        clientMsgId = null
+        clientMsgId = null,
     ) {
         const payload = {
             chat_id: chatId,

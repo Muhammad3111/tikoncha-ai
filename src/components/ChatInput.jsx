@@ -69,8 +69,12 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
                             className="flex-shrink-0 w-6 h-6 rounded-lg bg-gray-500 transition-colors opacity-50 cursor-not-allowed flex items-center justify-center focus:outline-none"
                             disabled={true}
                             title="Tez orada..."
+                            aria-label="Fayl yuklash (tez orada)"
                         >
-                            <Plus className="w-4 h-4 text-white" />
+                            <Plus
+                                className="w-4 h-4 text-white"
+                                aria-hidden="true"
+                            />
                         </button>
 
                         {/* Textarea */}
@@ -87,6 +91,8 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
                                 color: "var(--text-color)",
                                 minHeight: "36px",
                             }}
+                            aria-label="Xabar matni"
+                            aria-describedby="message-hint"
                         />
 
                         {/* Send button (faqat message bor bo'lganda yoki loading paytida) */}
@@ -95,11 +101,22 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
                                 type="submit"
                                 disabled={!hasMessage || disabled}
                                 className="flex-shrink-0 w-6 h-6 rounded-lg bg-green-600 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg focus:outline-none"
+                                aria-label={
+                                    isSending
+                                        ? "Yuborilmoqda..."
+                                        : "Xabar yuborish"
+                                }
                             >
                                 {isSending ? (
-                                    <Loader2 className="w-4 h-4 text-white animate-spin" />
+                                    <Loader2
+                                        className="w-4 h-4 text-white animate-spin"
+                                        aria-hidden="true"
+                                    />
                                 ) : (
-                                    <ArrowUp className="w-4 h-4 text-white" />
+                                    <ArrowUp
+                                        className="w-4 h-4 text-white"
+                                        aria-hidden="true"
+                                    />
                                 )}
                             </button>
                         )}

@@ -8,42 +8,38 @@ const ChatContainer = ({
     streamingMessage,
     isLoadingHistory = false,
 }) => {
-    const messagesEndRef = useRef(null);
     const containerRef = useRef(null);
+    const messagesEndRef = useRef(null);
     const isInitialLoadRef = useRef(true);
     const prevMessagesLengthRef = useRef(0);
 
-    // Scroll to bottom - instant for initial load, smooth for new messages
+    // Scroll to bottom
     const scrollToBottom = (instant = false) => {
         if (instant) {
-            // Darhol eng oxiriga o'tish (scroll animatsiyasiz)
             messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
         } else {
-            // Yangi xabarlar uchun smooth scroll
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
     };
 
+    // Initial load va yangi xabarlar uchun scroll
     useEffect(() => {
-        // Birinchi marta yuklanganda yoki history yuklanganda - darhol oxiriga
         if (isInitialLoadRef.current && messages.length > 0) {
-            // Kichik delay - DOM to'liq renderlanishi uchun
             setTimeout(() => {
-                scrollToBottom(true); // instant scroll
+                scrollToBottom(true);
             }, 50);
             isInitialLoadRef.current = false;
             prevMessagesLengthRef.current = messages.length;
             return;
         }
 
-        // Yangi xabar qo'shilganda - smooth scroll
         if (messages.length > prevMessagesLengthRef.current) {
-            scrollToBottom(false); // smooth scroll
+            scrollToBottom(false);
         }
         prevMessagesLengthRef.current = messages.length;
     }, [messages]);
 
-    // Streaming paytida smooth scroll
+    // Streaming paytida scroll
     useEffect(() => {
         if (streamingMessage) {
             scrollToBottom(false);
@@ -51,7 +47,7 @@ const ChatContainer = ({
     }, [streamingMessage]);
 
     return (
-        <div
+        <main
             ref={containerRef}
             className="flex-1 overflow-y-auto py-4 pb-32 min-h-0"
             style={{
@@ -59,13 +55,23 @@ const ChatContainer = ({
                 flexShrink: 1,
                 flexGrow: 1,
             }}
+            role="log"
+            aria-live="polite"
+            aria-label="Chat xabarlari"
         >
             <div className="max-w-4xl mx-auto">
                 {/* History loading indicator */}
                 {isLoadingHistory && (
-                    <div className="flex justify-center py-8">
+                    <div
+                        className="flex justify-center py-8"
+                        role="status"
+                        aria-live="polite"
+                    >
                         <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                            <div
+                                className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin"
+                                aria-hidden="true"
+                            ></div>
                             <span
                                 className="text-sm"
                                 style={{ color: "var(--text-secondary)" }}
@@ -105,23 +111,21 @@ const ChatContainer = ({
                         </div>
                     )}
 
+                {/* Render all messages */}
                 {messages.map((message, index) => {
-                    // User xabari: is_mine yoki isOptimistic yoki isOwn (API dan kelgan)
                     const isOwn =
                         message.is_mine ||
                         message.isOptimistic ||
                         message.isOwn;
 
-                    // Sana separator kerakmi tekshirish
                     const shouldShowDateSeparator = () => {
-                        if (index === 0) return true; // Birinchi xabar uchun har doim
+                        if (index === 0) return true;
 
                         const currentDate = new Date(message.created_at);
                         const previousDate = new Date(
-                            messages[index - 1].created_at
+                            messages[index - 1].created_at,
                         );
 
-                        // Kun farqi bor bo'lsa separator ko'rsatish
                         return (
                             currentDate.toDateString() !==
                             previousDate.toDateString()
@@ -138,6 +142,7 @@ const ChatContainer = ({
                     );
                 })}
 
+                {/* Streaming message */}
                 {streamingMessage && (
                     <Message
                         message={streamingMessage}
@@ -146,9 +151,10 @@ const ChatContainer = ({
                     />
                 )}
 
-                <div ref={messagesEndRef} />
+                {/* Scroll anchor */}
+                <div ref={messagesEndRef} aria-hidden="true" />
             </div>
-        </div>
+        </main>
     );
 };
 

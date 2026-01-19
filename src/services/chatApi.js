@@ -11,7 +11,7 @@ const BASE_URL = "https://api.tikoncha.uz"; // Tikoncha API base URL
 export const getChatHistory = async (chatId, token, limit = 50) => {
     try {
         const url = `${BASE_URL}/chat/messages?chat_id=${encodeURIComponent(
-            chatId
+            chatId,
         )}&limit=${limit}`;
 
         const response = await fetch(url, {
@@ -63,8 +63,9 @@ export const formatMessageFromApi = (apiMessage) => {
 
 /**
  * API xabarlar ro'yxatini formatga o'tkazish
+ * Xabarlar sanasi bo'yicha tartiblangan (eng eski birinchi, eng yangi oxirida)
  * @param {Array} apiMessages - API dan kelgan xabarlar
- * @returns {Array} Formatted messages
+ * @returns {Array} Formatted messages sorted by date
  */
 export const formatMessagesFromApi = (apiMessages) => {
     if (!Array.isArray(apiMessages)) {
@@ -72,5 +73,8 @@ export const formatMessagesFromApi = (apiMessages) => {
         return [];
     }
 
-    return apiMessages.map(formatMessageFromApi);
+    // Format va sanasi bo'yicha tartiblash (eng eski birinchi)
+    return apiMessages
+        .map(formatMessageFromApi)
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 };

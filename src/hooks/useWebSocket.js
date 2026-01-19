@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { flushSync } from "react-dom";
 import wsService from "../services/websocket";
 
-export const useWebSocket = (token) => {
+export const useWebSocket = (token, chatId) => {
     const [isConnected, setIsConnected] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const [messages, setMessages] = useState([]);
@@ -12,9 +13,15 @@ export const useWebSocket = (token) => {
     const streamBufferRef = useRef("");
     const currentStreamIdRef = useRef(null);
     const pendingMessageIdRef = useRef(null);
+    const pendingChatIdRef = useRef(null);
     const sendTimeoutRef = useRef(null);
     const isStreamingRef = useRef(false);
     const streamTimeoutRef = useRef(null);
+    const currentChatIdRef = useRef(chatId);
+
+    useEffect(() => {
+        currentChatIdRef.current = chatId;
+    }, [chatId]);
 
     useEffect(() => {
         if (!token || token === "") {
@@ -34,131 +41,98 @@ export const useWebSocket = (token) => {
         };
 
         // Pong listener
-        const handlePong = () => {
-            console.log("Pong received - connection alive");
+        const handlePong = () => {};
+
+        const isMessageForCurrentChat = (message) => {
+            const messageChatId = message?.chat_id || message?.chatId;
+            const currentChatId = currentChatIdRef.current;
+            if (
+                messageChatId &&
+                currentChatId &&
+                messageChatId !== currentChatId
+            ) {
+                return false;
+            }
+            return true;
         };
+
+        // Pending final message - streaming tugaguncha saqlab turish
+        const pendingFinalMessageRef = { current: null };
 
         // Message created listener
         const handleMessageCreated = ({ data }) => {
             const message = data.message;
-            console.log("✅ Message created:", message);
-            console.log("   Is mine:", message.is_mine);
 
-            // Agar bot xabari bo'lsa va streaming bo'layotgan bo'lsa,
-            // streaming o'chirib, final xabarni qo'shamiz
-            if (!message.is_mine && isStreamingRef.current) {
-                console.log(
-                    "   Bot message after stream - clearing stream and adding final message"
-                );
+            if (!isMessageForCurrentChat(message)) {
+                return;
+            }
 
-                // Clear stream timeout
-                if (streamTimeoutRef.current) {
-                    clearTimeout(streamTimeoutRef.current);
-                    streamTimeoutRef.current = null;
-                }
-
+            // Bot xabari kelganda streaming ni to'xtatish
+            if (!message.is_mine) {
+                // Streaming ni tozalash
                 streamBufferRef.current = "";
                 setStreamingMessage(null);
                 isStreamingRef.current = false;
+
+                // Loading o'chirish
+                setIsSending(false);
+                pendingMessageIdRef.current = null;
+                pendingChatIdRef.current = null;
+
+                if (sendTimeoutRef.current) {
+                    clearTimeout(sendTimeoutRef.current);
+                    sendTimeoutRef.current = null;
+                }
             }
 
+            // Xabarni qo'shish
             setMessages((prev) => {
-                // Remove optimistic messages
                 const filtered = prev.filter((m) => !m.isOptimistic);
-
-                // Agar xabar allaqachon mavjud bo'lsa, yangilaymiz
                 const exists = filtered.some((m) => m.id === message.id);
                 if (exists) {
                     return filtered.map((m) =>
-                        m.id === message.id ? message : m
+                        m.id === message.id ? message : m,
                     );
                 }
-
-                // Yangi xabarni qo'shamiz
                 return [...filtered, message];
             });
-
-            // User xabari uchun loading o'chirish
-            if (message.is_mine) {
-                // User xabari kelganda loading o'chirmaydi, bot javob berguncha kutadi
-                console.log(
-                    "👤 User message received, keeping loading until bot responds"
-                );
-            } else {
-                // Bot xabari kelganda loading o'chirish - lekin stream tugaguncha kutish
-                console.log(
-                    "🤖 Bot message received, but waiting for stream to finish"
-                );
-
-                // Agar stream bo'layotgan bo'lsa, stream tugaguncha kutish
-                if (isStreamingRef.current) {
-                    console.log("   Stream is active, delaying loading stop");
-                    // Stream tugaganida loading o'chirish uchun timeout o'rnatish
-                    if (streamTimeoutRef.current) {
-                        clearTimeout(streamTimeoutRef.current);
-                    }
-                    streamTimeoutRef.current = setTimeout(() => {
-                        console.log(
-                            "   Stream timeout reached, stopping loading"
-                        );
-                        setIsSending(false);
-                        pendingMessageIdRef.current = null;
-
-                        if (sendTimeoutRef.current) {
-                            clearTimeout(sendTimeoutRef.current);
-                            sendTimeoutRef.current = null;
-                        }
-
-                        // Stream ni tozalash
-                        streamBufferRef.current = "";
-                        setStreamingMessage(null);
-                        isStreamingRef.current = false;
-                    }, 2000); // 2 sekund kutish - UI animation tugaguncha
-                } else {
-                    // Agar stream yo'q bo'lsa, darhol loading o'chirish
-                    console.log(
-                        "   No active stream, stopping loading immediately"
-                    );
-                    setIsSending(false);
-                    pendingMessageIdRef.current = null;
-
-                    if (sendTimeoutRef.current) {
-                        clearTimeout(sendTimeoutRef.current);
-                        sendTimeoutRef.current = null;
-                    }
-                }
-            }
         };
 
         // Message stream listener (bot responses)
         const handleMessageStream = ({ data }) => {
+            const currentChatId = currentChatIdRef.current;
+            const pendingChatId = pendingChatIdRef.current;
+            if (
+                !pendingChatId ||
+                !currentChatId ||
+                pendingChatId !== currentChatId
+            ) {
+                return;
+            }
+
             const delta = data.delta;
 
             // Agar yangi streaming boshlanayotgan bo'lsa, bufferni tozalash
             if (!isStreamingRef.current) {
                 streamBufferRef.current = "";
                 isStreamingRef.current = true;
-
-                // Stream boshlanganida loading o'chirmaydi, faqat final message kelganda o'chadi
             }
 
             // Deltani bufferga qo'shish
             streamBufferRef.current += delta;
 
-            // Darhol ko'rsatish (typing effect harfma-harf bo'ladi)
-            setStreamingMessage({
-                text: streamBufferRef.current,
-                isStreaming: true,
+            // flushSync - React batching ni bypass qiladi
+            // Har bir delta uchun ALOHIDA render majburlanadi
+            flushSync(() => {
+                setStreamingMessage({
+                    text: streamBufferRef.current,
+                    isStreaming: true,
+                });
             });
         };
 
-        // Message updated listener (ignore - biz message_created ishlatamiz)
-        const handleMessageUpdated = ({ data }) => {
-            console.log(
-                "🔄 Message updated - IGNORED (using message_created instead)"
-            );
-            // Bu eventni ignore qilamiz, chunki message_created ishlatamiz
-        };
+        // Message updated listener (ignore)
+        const handleMessageUpdated = () => {};
 
         // Error listener
         const handleError = ({ error: errorMsg }) => {
@@ -213,6 +187,7 @@ export const useWebSocket = (token) => {
 
             const clientMsgId = `client_${Date.now()}`;
             pendingMessageIdRef.current = clientMsgId;
+            pendingChatIdRef.current = chatId;
 
             // Add optimistic message
             const optimisticMessage = {
@@ -232,13 +207,14 @@ export const useWebSocket = (token) => {
                 text,
                 type,
                 attachmentUrl,
-                clientMsgId
+                clientMsgId,
             );
 
             if (!success) {
                 setError("Failed to send message");
                 setIsSending(false);
                 pendingMessageIdRef.current = null;
+                pendingChatIdRef.current = null;
                 // Remove optimistic message
                 setMessages((prev) => prev.filter((m) => m.id !== clientMsgId));
                 return;
@@ -246,21 +222,21 @@ export const useWebSocket = (token) => {
 
             // Set timeout - minimum 2 seconds loading, then check for response
             sendTimeoutRef.current = setTimeout(() => {
-                console.warn("No response from server after 2 seconds");
                 setIsSending(false);
                 pendingMessageIdRef.current = null;
+                pendingChatIdRef.current = null;
 
                 // Update optimistic message to show it was sent but no confirmation
                 setMessages((prev) =>
                     prev.map((m) =>
                         m.id === clientMsgId
                             ? { ...m, isLoading: false, isOptimistic: false }
-                            : m
-                    )
+                            : m,
+                    ),
                 );
             }, 2000);
         },
-        []
+        [],
     );
 
     const editMessage = useCallback((messageId, text) => {
@@ -273,10 +249,6 @@ export const useWebSocket = (token) => {
 
     // History xabarlarini o'rnatish funksiyasi
     const setInitialMessages = useCallback((historyMessages) => {
-        console.log(
-            "📋 Setting initial messages from history:",
-            historyMessages.length
-        );
         setMessages(historyMessages);
     }, []);
 
