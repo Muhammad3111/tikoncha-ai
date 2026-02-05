@@ -11,13 +11,13 @@ const ChatHeader = ({
     const { isDark } = useApp();
 
     const goBack = () => {
-        console.log("🔙 Back button clicked");
+        console.log("🔙 Back button clicked new new");
 
         if (window.AndroidJson && window.AndroidJson.onWebBackPressed) {
-            console.log("📱 Calling Android app back function");
+            console.log("📱 Calling Android app back function new new");
             window.AndroidJson.onWebBackPressed();
         } else {
-            console.log("🌐 Using browser back (fallback)");
+            console.log("🌐 Using browser back (fallback) new new");
             window.history.back();
         }
     };
