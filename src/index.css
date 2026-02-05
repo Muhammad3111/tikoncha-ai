@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    --base-font-size: 14px;
+    --background-color: #010d01;
+    --text-input-color: #1f1f1f;
+    --text-color: #ffffff;
+    --text-secondary: #cccccc;
+    --primary-color: #16a34a;
+    --primary-color-hover: #15803d;
+}
+
 /* Custom scrollbar - Dark theme (default) */
 ::-webkit-scrollbar {
     width: 8px;

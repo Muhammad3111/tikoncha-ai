@@ -1,6 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AppContext = createContext();
+const CUSTOM_COLORS = {
+    primary: "#C3955B",
+    darkBackground: "#130D00",
+    lightBackground: "#F1EEE2",
+};
+
+const parseBoolean = (value) => {
+    if (typeof value === "boolean") return value;
+
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === "true") return true;
+        if (normalized === "false") return false;
+    }
+
+    return null;
+};
 
 export const useApp = () => {
     const context = useContext(AppContext);
@@ -16,6 +33,7 @@ export const AppProvider = ({ children }) => {
     const [chatTitle, setChatTitle] = useState("Yordamchi Tiparatikon");
     const [theme, setTheme] = useState("dark");
     const [fontSize, setFontSize] = useState(14);
+    const [useParentColors, setUseParentColors] = useState(false);
     const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
@@ -26,9 +44,11 @@ export const AppProvider = ({ children }) => {
         const urlChatTitle = urlParams.get("chatTitle");
         const urlTheme = urlParams.get("theme");
         const urlFontSize = urlParams.get("fontSize");
+        const urlParent = urlParams.get("parent");
+        const parsedUrlParent = parseBoolean(urlParent);
 
         // Agar URL parametrlar mavjud bo'lsa
-        if (urlToken || urlChatId) {
+        if (urlToken || urlChatId || parsedUrlParent !== null) {
             // URL parametrlardan state ni yangilash
             if (urlToken) {
                 setToken(
@@ -41,6 +61,7 @@ export const AppProvider = ({ children }) => {
             if (urlChatTitle) setChatTitle(decodeURIComponent(urlChatTitle));
             if (urlTheme) setTheme(urlTheme);
             if (urlFontSize) setFontSize(parseInt(urlFontSize));
+            if (parsedUrlParent !== null) setUseParentColors(parsedUrlParent);
 
             setIsReady(true);
         }
@@ -52,6 +73,9 @@ export const AppProvider = ({ children }) => {
                     typeof event.data === "string"
                         ? JSON.parse(event.data)
                         : event.data;
+                if (!data || typeof data !== "object") {
+                    return;
+                }
 
                 // Token
                 if (data.token) {
@@ -82,19 +106,16 @@ export const AppProvider = ({ children }) => {
                     setFontSize(parseInt(data.fontSize));
                 }
 
+                // Parent color control (true/false)
+                if (Object.prototype.hasOwnProperty.call(data, "parent")) {
+                    const parsedParent = parseBoolean(data.parent);
+                    if (parsedParent !== null) {
+                        setUseParentColors(parsedParent);
+                    }
+                }
+
                 // Barcha ma'lumotlar bir vaqtda kelishi mumkin
                 if (data.type === "init" || data.type === "config") {
-                    if (data.token)
-                        setToken(
-                            data.token.startsWith("Bearer ")
-                                ? data.token
-                                : `Bearer ${data.token}`,
-                        );
-                    if (data.chatId) setChatId(data.chatId);
-                    if (data.chatTitle) setChatTitle(data.chatTitle);
-                    if (data.theme) setTheme(data.theme);
-                    if (data.fontSize) setFontSize(parseInt(data.fontSize));
-
                     // Ma'lumotlar kelganda ready qilish
                     setIsReady(true);
                 }
@@ -139,21 +160,50 @@ export const AppProvider = ({ children }) => {
     // Theme ranglarini o'rnatish
     useEffect(() => {
         const root = document.documentElement;
+        root.setAttribute("data-theme", theme);
 
         if (theme === "dark") {
             // Dark theme ranglari
-            root.style.setProperty("--text-input-color", "#1F1F1F");
-            root.style.setProperty("--background-color", "#010D01");
+            root.style.setProperty(
+                "--text-input-color",
+                useParentColors ? "#22170D" : "#1F1F1F",
+            );
+            root.style.setProperty(
+                "--background-color",
+                useParentColors
+                    ? CUSTOM_COLORS.darkBackground
+                    : "#010D01",
+            );
             root.style.setProperty("--text-color", "#FFFFFF");
-            root.style.setProperty("--text-secondary", "#CCCCCC");
+            root.style.setProperty(
+                "--text-secondary",
+                useParentColors ? "#D3C2A9" : "#CCCCCC",
+            );
         } else {
             // Light theme ranglari
             root.style.setProperty("--text-input-color", "#FFFFFF");
-            root.style.setProperty("--background-color", "#F5F7F5");
+            root.style.setProperty(
+                "--background-color",
+                useParentColors
+                    ? CUSTOM_COLORS.lightBackground
+                    : "#F5F7F5",
+            );
             root.style.setProperty("--text-color", "#000000");
-            root.style.setProperty("--text-secondary", "#666666");
+            root.style.setProperty(
+                "--text-secondary",
+                useParentColors ? "#5A4A38" : "#666666",
+            );
         }
-    }, [theme]);
+
+        root.style.setProperty(
+            "--primary-color",
+            useParentColors ? CUSTOM_COLORS.primary : "#16A34A",
+        );
+        root.style.setProperty(
+            "--primary-color-hover",
+            useParentColors ? "#AB7F4B" : "#15803D",
+        );
+    }, [theme, useParentColors]);
 
     const value = {
         token,
@@ -163,11 +213,13 @@ export const AppProvider = ({ children }) => {
         fontSize,
         isReady,
         isDark: theme === "dark",
+        useParentColors,
         setToken,
         setChatId,
         setChatTitle,
         setTheme,
         setFontSize,
+        setUseParentColors,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

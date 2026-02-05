@@ -100,7 +100,10 @@ const ChatInput = ({ onSend, isSending, disabled }) => {
                             <button
                                 type="submit"
                                 disabled={!hasMessage || disabled}
-                                className="flex-shrink-0 w-6 h-6 rounded-lg bg-green-600 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg focus:outline-none"
+                                className="flex-shrink-0 w-6 h-6 rounded-lg transition-all hover:brightness-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg focus:outline-none"
+                                style={{
+                                    backgroundColor: "var(--primary-color)",
+                                }}
                                 aria-label={
                                     isSending
                                         ? "Yuborilmoqda..."

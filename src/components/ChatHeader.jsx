@@ -13,9 +13,9 @@ const ChatHeader = ({
     const goBack = () => {
         console.log("🔙 Back button clicked");
 
-        if (window.AndroidChat && window.AndroidChat.onBackFromWeb) {
+        if (window.AndroidJson && window.AndroidJson.onWebBackPressed) {
             console.log("📱 Calling Android app back function");
-            window.AndroidChat.onBackFromWeb();
+            window.AndroidJson.onWebBackPressed();
         } else {
             console.log("🌐 Using browser back (fallback)");
             window.history.back();
@@ -39,9 +39,8 @@ const ChatHeader = ({
             <div className="max-w-4xl mx-auto flex items-center gap-3">
                 {/* Back button */}
                 <button
-                    className={`flex-shrink-0 p-2 rounded-lg ${
-                        isDark ? "bg-[#1F1F1F]" : "bg-[#F3F4F7]"
-                    } transition-colors`}
+                    className="flex-shrink-0 p-2 rounded-lg transition-colors"
+                    style={{ backgroundColor: "var(--text-input-color)" }}
                     onClick={goBack}
                     aria-label="Orqaga qaytish"
                 >
@@ -74,13 +73,8 @@ const ChatHeader = ({
                         {chatName}
                     </h1>
                     <p
-                        className={`text-xs ${
-                            isConnecting
-                                ? "text-green-500"
-                                : isConnected
-                                  ? "text-green-500"
-                                  : "text-green-500"
-                        }`}
+                        className="text-xs"
+                        style={{ color: "var(--primary-color)" }}
                         role="status"
                         aria-live="polite"
                     >

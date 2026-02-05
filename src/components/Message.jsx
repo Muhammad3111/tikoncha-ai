@@ -36,15 +36,19 @@ const Message = ({ message, isStreaming = false, isOwn = false }) => {
                             isStreaming={isStreaming}
                         />
                         {isStreaming && (
-                            <span className="inline-block w-1 h-4 bg-green-500 animate-pulse ml-0.5 align-middle" />
+                            <span
+                                className="inline-block w-1 h-4 animate-pulse ml-0.5 align-middle"
+                                style={{ backgroundColor: "var(--primary-color)" }}
+                            />
                         )}
 
                         {/* Timestamp inside message bubble */}
                         {message?.created_at && !isLoading && (
                             <div
-                                className={`text-xs text-green-600 mt-1 ${
+                                className={`text-xs mt-1 ${
                                     isOwn ? "text-right" : "text-left"
                                 }`}
+                                style={{ color: "var(--primary-color)" }}
                             >
                                 {new Date(
                                     message.created_at,
