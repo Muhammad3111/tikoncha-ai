@@ -19,6 +19,10 @@ const parseBoolean = (value) => {
     return null;
 };
 
+const logMobileMessage = (label, payload) => {
+    console.debug(`[Mobile Debug] ${label}:`, payload);
+};
+
 export const useApp = () => {
     const context = useContext(AppContext);
     if (!context) {
@@ -68,12 +72,21 @@ export const AppProvider = ({ children }) => {
 
         // Mobile appdan postMessage orqali ma'lumotlarni qabul qilish
         const handleMessage = (event) => {
+            logMobileMessage("Raw message", event.data);
+
             try {
                 const data =
                     typeof event.data === "string"
                         ? JSON.parse(event.data)
                         : event.data;
+
+                logMobileMessage("Parsed JSON", data);
+
                 if (!data || typeof data !== "object") {
+                    logMobileMessage(
+                        "Ignored (payload object emas)",
+                        data,
+                    );
                     return;
                 }
 
@@ -121,6 +134,7 @@ export const AppProvider = ({ children }) => {
                 }
             } catch (error) {
                 console.error("Error parsing message from mobile app:", error);
+                logMobileMessage("Parse failed payload", event.data);
             }
         };
 
