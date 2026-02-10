@@ -25,16 +25,21 @@ const ChatHeader = ({
         // @JavascriptInterface fun backPressed()
         if (window.AndroidJson) {
             try {
-                if (typeof window.AndroidJson.backPressed === "function") {
+                const backPressedType = typeof window.AndroidJson.backPressed;
+                logForAndroid("debug", "Android bridge detected", {
+                    backPressedType,
+                });
+
+                if (backPressedType !== "undefined") {
                     window.AndroidJson.backPressed();
                     return true;
                 }
 
-                // Optional fallback for bridge implementations that only expose sendData(json)
-                if (typeof window.AndroidJson.sendData === "function") {
-                    window.AndroidJson.sendData(serializedPayload);
-                    return true;
-                }
+                logForAndroid(
+                    "warn",
+                    "AndroidJson.backPressed not exposed by WebView bridge",
+                    null,
+                );
             } catch (error) {
                 logForAndroid("error", "Android back bridge error", error);
             }
