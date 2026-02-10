@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { logForAndroid, toSerializableError } from "../utils/mobileLogger";
 
 const AppContext = createContext();
 const CUSTOM_COLORS = {
@@ -17,10 +18,6 @@ const parseBoolean = (value) => {
     }
 
     return null;
-};
-
-const logMobileMessage = (label, payload) => {
-    console.debug(`[Mobile Debug] ${label}:`, payload);
 };
 
 export const useApp = () => {
@@ -72,7 +69,7 @@ export const AppProvider = ({ children }) => {
 
         // Mobile appdan postMessage orqali ma'lumotlarni qabul qilish
         const handleMessage = (event) => {
-            logMobileMessage("Raw message", event.data);
+            logForAndroid("debug", "Raw message", event.data);
 
             try {
                 const data =
@@ -80,13 +77,10 @@ export const AppProvider = ({ children }) => {
                         ? JSON.parse(event.data)
                         : event.data;
 
-                logMobileMessage("Parsed JSON", data);
+                logForAndroid("debug", "Parsed JSON", data);
 
                 if (!data || typeof data !== "object") {
-                    logMobileMessage(
-                        "Ignored (payload object emas)",
-                        data,
-                    );
+                    logForAndroid("debug", "Ignored (payload object emas)", data);
                     return;
                 }
 
@@ -133,8 +127,12 @@ export const AppProvider = ({ children }) => {
                     setIsReady(true);
                 }
             } catch (error) {
-                console.error("Error parsing message from mobile app:", error);
-                logMobileMessage("Parse failed payload", event.data);
+                logForAndroid(
+                    "error",
+                    "Error parsing message from mobile app",
+                    toSerializableError(error),
+                );
+                logForAndroid("error", "Parse failed payload", event.data);
             }
         };
 
