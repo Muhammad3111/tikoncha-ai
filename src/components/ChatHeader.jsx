@@ -11,15 +11,87 @@ const ChatHeader = ({
 }) => {
     const { isDark } = useApp();
 
+    const notifyNativeBack = () => {
+        const payload = {
+            type: "back",
+            action: "close_webview",
+            source: "chat_header",
+            ts: Date.now(),
+        };
+        const serializedPayload = JSON.stringify(payload);
+
+        // Android native interface (if app exposed explicit callback)
+        if (window.AndroidJson) {
+            if (typeof window.AndroidJson.onWebBackPressed === "function") {
+                window.AndroidJson.onWebBackPressed();
+                return true;
+            }
+
+            // Matches Android Kotlin bridge: @JavascriptInterface fun backPressed()
+            if (typeof window.AndroidJson.backPressed === "function") {
+                window.AndroidJson.backPressed();
+                return true;
+            }
+
+            // Fallback channel: send typed event to native.
+            if (typeof window.AndroidJson.sendData === "function") {
+                window.AndroidJson.sendData(serializedPayload);
+                return true;
+            }
+        }
+
+        // iOS WKWebView explicit handler (if app exposes it)
+        if (
+            window.webkit &&
+            window.webkit.messageHandlers &&
+            window.webkit.messageHandlers.onWebBackPressed &&
+            typeof window.webkit.messageHandlers.onWebBackPressed.postMessage ===
+                "function"
+        ) {
+            window.webkit.messageHandlers.onWebBackPressed.postMessage(payload);
+            return true;
+        }
+
+        // React Native WebView bridge
+        if (
+            window.ReactNativeWebView &&
+            typeof window.ReactNativeWebView.postMessage === "function"
+        ) {
+            window.ReactNativeWebView.postMessage(serializedPayload);
+            return true;
+        }
+
+        // iOS RN fallback: sometimes exposed through WebKit message handler.
+        if (
+            window.webkit &&
+            window.webkit.messageHandlers &&
+            window.webkit.messageHandlers.ReactNativeWebView &&
+            typeof window.webkit.messageHandlers.ReactNativeWebView.postMessage ===
+                "function"
+        ) {
+            window.webkit.messageHandlers.ReactNativeWebView.postMessage(
+                serializedPayload,
+            );
+            return true;
+        }
+
+        return false;
+    };
+
     const goBack = () => {
         logForAndroid("log", "Back button clicked", null);
 
-        if (window.AndroidJson && window.AndroidJson.onWebBackPressed) {
-            logForAndroid("log", "Calling Android app back function", null);
-            window.AndroidJson.onWebBackPressed();
-        } else {
+        const handledByNative = notifyNativeBack();
+        if (handledByNative) {
+            logForAndroid("log", "Back handled by native bridge", null);
+            return;
+        }
+
+        if (window.history.length > 1) {
             logForAndroid("log", "Using browser back fallback", null);
             window.history.back();
+        } else {
+            logForAndroid("warn", "No native back bridge and no history", null);
         }
     };
 
