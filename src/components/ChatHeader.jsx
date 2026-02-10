@@ -20,23 +20,23 @@ const ChatHeader = ({
         };
         const serializedPayload = JSON.stringify(payload);
 
-        // Android native interface (if app exposed explicit callback)
+        // Matches Android Kotlin bridge:
+        // addJavascriptInterface(AndroidJsonBridge(...), "AndroidJson")
+        // @JavascriptInterface fun backPressed()
         if (window.AndroidJson) {
-            if (typeof window.AndroidJson.onWebBackPressed === "function") {
-                window.AndroidJson.onWebBackPressed();
-                return true;
-            }
+            try {
+                if (typeof window.AndroidJson.backPressed === "function") {
+                    window.AndroidJson.backPressed();
+                    return true;
+                }
 
-            // Matches Android Kotlin bridge: @JavascriptInterface fun backPressed()
-            if (typeof window.AndroidJson.backPressed === "function") {
-                window.AndroidJson.backPressed();
-                return true;
-            }
-
-            // Fallback channel: send typed event to native.
-            if (typeof window.AndroidJson.sendData === "function") {
-                window.AndroidJson.sendData(serializedPayload);
-                return true;
+                // Optional fallback for bridge implementations that only expose sendData(json)
+                if (typeof window.AndroidJson.sendData === "function") {
+                    window.AndroidJson.sendData(serializedPayload);
+                    return true;
+                }
+            } catch (error) {
+                logForAndroid("error", "Android back bridge error", error);
             }
         }
 
