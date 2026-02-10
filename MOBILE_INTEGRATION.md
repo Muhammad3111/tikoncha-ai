@@ -87,7 +87,6 @@ const ChatWebView = ({ token, chatId, chatTitle, theme, fontSize }) => {
         const data = JSON.parse(event.nativeEvent.data);
 
         if (data.type === "ready") {
-            console.log("WebView is ready");
             // Ma'lumotlarni yuborish
             webViewRef.current.postMessage(
                 JSON.stringify({

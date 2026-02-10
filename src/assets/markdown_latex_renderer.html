@@ -234,10 +234,7 @@
             document.execCommand('copy');
             btn.innerHTML = CHECK_ICON;
             setTimeout(() => { btn.innerHTML = COPY_ICON; }, 2000);
-          } catch (err) {
-            const errorText = err && err.stack ? `${err.message}\n${err.stack}` : String(err);
-            console.error(`[Mobile Debug] Failed to copy: ${errorText}`);
-          }
+          } catch (_err) {}
 
           document.body.removeChild(textArea);
         };

@@ -2,8 +2,6 @@
  * WebSocket Token Service
  * Manages WebSocket session tokens with automatic refresh
  */
-import { logForAndroid, toSerializableError } from "../utils/mobileLogger";
-
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "https://api.tikoncha.uz";
 const WS_TOKEN_URL =
@@ -37,15 +35,9 @@ class TokenService {
      */
     async getSessionToken() {
         if (this.isTokenValid()) {
-            logForAndroid("log", "Using cached session token", {
-                expiresAt: this.expiresAt
-                    ? new Date(this.expiresAt).toISOString()
-                    : null,
-            });
             return this.sessionToken;
         }
 
-        logForAndroid("log", "Fetching new session token", null);
         return await this.fetchNewToken();
     }
 
@@ -93,23 +85,11 @@ class TokenService {
             this.sessionToken = session_token;
             this.expiresAt = Date.now() + expires_in * 1000;
 
-            logForAndroid("log", "New session token received", {
-                expiresInSeconds: expires_in,
-                refreshAt: new Date(
-                    this.expiresAt - TOKEN_REFRESH_BUFFER * 1000,
-                ).toISOString(),
-            });
-
             this.scheduleRefresh(expires_in);
             this.emit("token_refreshed", { session_token, expires_in });
 
             return this.sessionToken;
         } catch (error) {
-            logForAndroid(
-                "error",
-                "Failed to fetch session token",
-                toSerializableError(error),
-            );
             this.emit("token_error", { error: error.message });
             throw error;
         }
@@ -128,21 +108,12 @@ class TokenService {
 
         if (refreshIn > 0) {
             this.refreshTimer = setTimeout(async () => {
-                logForAndroid("log", "Auto-refreshing session token", null);
                 try {
                     await this.fetchNewToken();
-                } catch (error) {
-                    logForAndroid(
-                        "error",
-                        "Auto-refresh failed",
-                        toSerializableError(error),
-                    );
+                } catch (_error) {
+                    // Ignore auto-refresh errors here; token_error event is emitted upstream.
                 }
             }, refreshIn);
-
-            logForAndroid("log", "Token refresh scheduled", {
-                refreshInSeconds: Math.floor(refreshIn / 1000),
-            });
         }
     }
 
@@ -151,7 +122,6 @@ class TokenService {
      * @returns {Promise<string>} New session token
      */
     async refreshToken() {
-        logForAndroid("log", "Manual token refresh requested", null);
         return await this.fetchNewToken();
     }
 
@@ -165,7 +135,6 @@ class TokenService {
         }
         this.sessionToken = null;
         this.expiresAt = null;
-        logForAndroid("log", "Token service cleared", null);
     }
 
     /**
@@ -174,7 +143,6 @@ class TokenService {
      */
     updateJwtToken(newJwtToken) {
         this.jwtToken = newJwtToken;
-        logForAndroid("log", "JWT token updated", null);
     }
 
     /**
@@ -202,11 +170,8 @@ class TokenService {
             this.listeners.get(event).forEach((callback) => {
                 try {
                     callback(data);
-                } catch (error) {
-                    logForAndroid("error", "Error in event listener", {
-                        event,
-                        error: toSerializableError(error),
-                    });
+                } catch (_error) {
+                    // Ignore listener exceptions to avoid breaking other listeners.
                 }
             });
         }

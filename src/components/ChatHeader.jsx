@@ -2,7 +2,6 @@ import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import aiLogo from "../assets/ai_logo.png";
-import { logForAndroid } from "../utils/mobileLogger";
 
 const ChatHeader = ({
     isConnected,
@@ -24,24 +23,9 @@ const ChatHeader = ({
         // addJavascriptInterface(AndroidJsonBridge(...), "AndroidJson")
         // @JavascriptInterface fun backPressed()
         if (window.AndroidJson) {
-            try {
-                const backPressedType = typeof window.AndroidJson.backPressed;
-                logForAndroid("debug", "Android bridge detected", {
-                    backPressedType,
-                });
-
-                if (backPressedType !== "undefined") {
-                    window.AndroidJson.backPressed();
-                    return true;
-                }
-
-                logForAndroid(
-                    "warn",
-                    "AndroidJson.backPressed not exposed by WebView bridge",
-                    null,
-                );
-            } catch (error) {
-                logForAndroid("error", "Android back bridge error", error);
+            if (typeof window.AndroidJson.backPressed !== "undefined") {
+                window.AndroidJson.backPressed();
+                return true;
             }
         }
 
@@ -84,19 +68,13 @@ const ChatHeader = ({
     };
 
     const goBack = () => {
-        logForAndroid("log", "Back button clicked", null);
-
         const handledByNative = notifyNativeBack();
         if (handledByNative) {
-            logForAndroid("log", "Back handled by native bridge", null);
             return;
         }
 
         if (window.history.length > 1) {
-            logForAndroid("log", "Using browser back fallback", null);
             window.history.back();
-        } else {
-            logForAndroid("warn", "No native back bridge and no history", null);
         }
     };
 

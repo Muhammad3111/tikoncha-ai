@@ -173,13 +173,8 @@ Build qilingan versiyada ham console loglar ishlaydi:
 
 ```javascript
 // AppContext dan
-console.log("📱 AppContext initialized, waiting for data from mobile app...");
-console.log("📱 Received message from mobile app:", data);
-console.log("✅ App initialized with data from mobile app");
 
 // useWebSocket dan
-console.log("🔄 useWebSocket effect running");
-console.log("📡 Connection status changed:", connected);
 ```
 
 ### Agar ma'lumotlar kelmasa

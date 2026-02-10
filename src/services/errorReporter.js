@@ -2,8 +2,6 @@
  * Error Reporting Service
  * Centralized error logging and reporting
  */
-import { logForAndroid, toSerializableError } from "../utils/mobileLogger";
-
 const ENABLE_ERROR_REPORTING =
     import.meta.env.VITE_ENABLE_ERROR_REPORTING === "true";
 const ERROR_REPORTING_URL = import.meta.env.VITE_ERROR_REPORTING_URL;
@@ -40,7 +38,6 @@ class ErrorReporter {
         });
 
         this.isInitialized = true;
-        logForAndroid("log", "Error reporter initialized", { env: ENV });
     }
 
     /**
@@ -58,8 +55,6 @@ class ErrorReporter {
             env: ENV,
             context,
         };
-
-        logForAndroid("error", "Error captured", errorData);
 
         this.addToQueue(errorData);
 
@@ -81,8 +76,6 @@ class ErrorReporter {
             env: ENV,
             extra,
         };
-
-        logForAndroid("warn", "Message captured", errorData);
 
         this.addToQueue(errorData);
 
@@ -116,12 +109,8 @@ class ErrorReporter {
                 },
                 body: JSON.stringify(errorData),
             });
-        } catch (error) {
-            logForAndroid(
-                "error",
-                "Failed to send error to server",
-                toSerializableError(error),
-            );
+        } catch (_error) {
+            // Ignore reporting transport failures.
         }
     }
 
@@ -153,10 +142,8 @@ class ErrorReporter {
      * @param {string} message
      * @param {Object} data
      */
-    addBreadcrumb(message, data = {}) {
-        if (ENV === "development") {
-            logForAndroid("log", "Breadcrumb", { message, data });
-        }
+    addBreadcrumb(_message, _data = {}) {
+        // Intentionally left blank.
     }
 }
 

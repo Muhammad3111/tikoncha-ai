@@ -181,18 +181,12 @@ Virtual scrolling mobile da juda foydali:
 ### 1. Normal Mode (< 50 xabar)
 
 ```javascript
-// Console da
-console.log("Messages:", messages.length);
-// Output: Messages: 30
 // Virtual scrolling: OFF
 ```
 
 ### 2. Virtual Mode (≥ 50 xabar)
 
 ```javascript
-// Console da
-console.log("Messages:", messages.length);
-// Output: Messages: 150
 // Virtual scrolling: ON
 ```
 
@@ -226,23 +220,21 @@ setMessages(testMessages);
 
 ```javascript
 // ChatContainer.jsx da
-console.log("Use virtualization:", useVirtualization);
-console.log("Message count:", messages.length);
+// useVirtualization va messages.length holatini tekshiring.
 ```
 
 ### Rendered Items
 
 ```javascript
 // VirtualizedMessageList.jsx da
-console.log("Total items:", allItems.length);
-console.log("Rendered items:", "viewport + 10 (overscan)");
+// allItems.length va render qilingan elementlar sonini tekshiring.
 ```
 
 ### Height Cache
 
 ```javascript
 // VirtualizedMessageList.jsx da
-console.log("Row heights:", rowHeights.current);
+// rowHeights.current qiymatini tekshiring.
 ```
 
 ---

@@ -358,7 +358,7 @@ npm run preview
 import tokenService from "./services/tokenService";
 
 // Token ma'lumotlarini ko'rish
-console.log(tokenService.getTokenInfo());
+tokenService.getTokenInfo();
 // Output:
 // {
 //   hasToken: true,
@@ -374,7 +374,7 @@ console.log(tokenService.getTokenInfo());
 import errorReporter from "./services/errorReporter";
 
 // Barcha xatolarni ko'rish
-console.log(errorReporter.getErrors());
+errorReporter.getErrors();
 
 // Xatolarni tozalash
 errorReporter.clearErrors();
@@ -385,12 +385,12 @@ errorReporter.clearErrors();
 ```javascript
 // Service Worker status
 navigator.serviceWorker.ready.then((registration) => {
-    console.log("Service Worker ready:", registration);
+    registration;
 });
 
 // Cache contents
 caches.keys().then((keys) => {
-    console.log("Cache keys:", keys);
+    keys;
 });
 ```
 

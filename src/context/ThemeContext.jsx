@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { logForAndroid, toSerializableError } from "../utils/mobileLogger";
 
 const ThemeContext = createContext();
 
@@ -25,16 +24,9 @@ export const ThemeProvider = ({ children }) => {
 
                 if (data.type === "theme") {
                     setIsDark(data.isDark);
-                    logForAndroid("log", "Theme changed", {
-                        isDark: Boolean(data.isDark),
-                        theme: data.isDark ? "dark" : "light",
-                    });
                 }
-            } catch (error) {
-                logForAndroid("error", "Error parsing theme message", {
-                    error: toSerializableError(error),
-                    payload: event.data,
-                });
+            } catch (_error) {
+                // Ignore malformed theme payloads.
             }
         };
 

@@ -1,6 +1,4 @@
 // Chat API xizmatlari
-import { logForAndroid, toSerializableError } from "../utils/mobileLogger";
-
 const BASE_URL = "https://api.tikoncha.uz"; // Tikoncha API base URL
 
 /**
@@ -34,11 +32,6 @@ export const getChatHistory = async (chatId, token, limit = 50) => {
 
         return data;
     } catch (error) {
-        logForAndroid(
-            "error",
-            "Error loading chat history",
-            toSerializableError(error),
-        );
         throw error;
     }
 };
@@ -75,7 +68,6 @@ export const formatMessageFromApi = (apiMessage) => {
  */
 export const formatMessagesFromApi = (apiMessages) => {
     if (!Array.isArray(apiMessages)) {
-        logForAndroid("warn", "API messages is not an array", apiMessages);
         return [];
     }
 

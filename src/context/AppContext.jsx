@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { logForAndroid, toSerializableError } from "../utils/mobileLogger";
 
 const AppContext = createContext();
 const CUSTOM_COLORS = {
@@ -138,15 +137,10 @@ export const AppProvider = ({ children }) => {
                     ? event.data
                     : event?.detail?.data ?? event?.detail ?? null;
 
-            logForAndroid("debug", "Raw message", rawPayload);
-
             try {
                 const data = parseIncomingMessage(rawPayload);
 
-                logForAndroid("debug", "Parsed JSON", data);
-
                 if (!data || typeof data !== "object") {
-                    logForAndroid("debug", "Ignored (payload object emas)", data);
                     return;
                 }
 
@@ -221,13 +215,8 @@ export const AppProvider = ({ children }) => {
                     // Ma'lumotlar kelganda ready qilish
                     setIsReady(true);
                 }
-            } catch (error) {
-                logForAndroid(
-                    "error",
-                    "Error parsing message from mobile app",
-                    toSerializableError(error),
-                );
-                logForAndroid("error", "Parse failed payload", rawPayload);
+            } catch (_error) {
+                // Ignore malformed bridge payloads.
             }
         };
 
