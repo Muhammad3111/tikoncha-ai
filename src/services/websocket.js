@@ -6,6 +6,7 @@ import {
 } from "../config";
 import tokenService from "./tokenService";
 import errorReporter from "./errorReporter";
+import { logForAndroid, toSerializableError } from "../utils/mobileLogger";
 
 class WebSocketService {
     constructor() {
@@ -21,7 +22,7 @@ class WebSocketService {
     async connect(jwtToken) {
         // If already connected, return existing connection
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            console.log("Already connected, reusing connection");
+            logForAndroid("log", "Already connected, reusing connection", null);
             return Promise.resolve();
         }
 
@@ -35,13 +36,17 @@ class WebSocketService {
 
         try {
             // Initialize token service and get session token
-            console.log("🔐 Getting session token...");
+            logForAndroid("log", "Getting session token", null);
             await tokenService.initialize(jwtToken);
             const sessionToken = await tokenService.getSessionToken();
 
             return this._connectWithSessionToken(sessionToken);
         } catch (error) {
-            console.error("❌ Failed to get session token:", error);
+            logForAndroid(
+                "error",
+                "Failed to get session token",
+                toSerializableError(error),
+            );
             errorReporter.captureError(error, { context: "websocket_connect" });
             throw error;
         }
@@ -72,12 +77,16 @@ class WebSocketService {
                         // Emit general message event
                         this.emit("message", data);
                     } catch (error) {
-                        console.error("Error parsing message:", error);
+                        logForAndroid(
+                            "error",
+                            "Error parsing message",
+                            toSerializableError(error),
+                        );
                     }
                 };
 
                 this.ws.onerror = (error) => {
-                    console.error("WebSocket error:", error);
+                    logForAndroid("error", "WebSocket error", error);
                     errorReporter.captureError(error, {
                         context: "websocket_error",
                     });
@@ -90,11 +99,17 @@ class WebSocketService {
                     this.stopPing();
                     this.emit("connection_status", { connected: false });
 
-                    console.log("WebSocket closed:", event.code, event.reason);
+                    logForAndroid("log", "WebSocket closed", {
+                        code: event.code,
+                        reason: event.reason,
+                    });
 
                     // Check if token expired (code 1008 or 4401)
                     if (event.code === 1008 || event.code === 4401) {
-                        console.log("🔐 Token expired, refreshing...");
+                        logForAndroid("warn", "Token expired, refreshing", {
+                            code: event.code,
+                            reason: event.reason,
+                        });
                         this.handleTokenExpired();
                         return;
                     }
@@ -114,12 +129,20 @@ class WebSocketService {
 
     async handleTokenExpired() {
         try {
-            console.log("🔄 Refreshing session token...");
+            logForAndroid("log", "Refreshing session token", null);
             const newSessionToken = await tokenService.refreshToken();
-            console.log("✅ Session token refreshed, reconnecting...");
+            logForAndroid(
+                "log",
+                "Session token refreshed, reconnecting",
+                null,
+            );
             await this._connectWithSessionToken(newSessionToken);
         } catch (error) {
-            console.error("❌ Failed to refresh token:", error);
+            logForAndroid(
+                "error",
+                "Failed to refresh token",
+                toSerializableError(error),
+            );
             errorReporter.captureError(error, { context: "token_refresh" });
             this.emit("token_expired", { error: error.message });
         }
@@ -127,15 +150,20 @@ class WebSocketService {
 
     reconnect() {
         this.reconnectAttempts++;
-        console.log(
-            `🔄 Reconnect attempt ${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`,
-        );
+        logForAndroid("warn", "Reconnect attempt", {
+            attempt: this.reconnectAttempts,
+            maxAttempts: MAX_RECONNECT_ATTEMPTS,
+        });
 
         setTimeout(async () => {
             try {
                 await this.connect(this.jwtToken);
             } catch (error) {
-                console.error("Reconnect failed:", error);
+                logForAndroid(
+                    "error",
+                    "Reconnect failed",
+                    toSerializableError(error),
+                );
             }
         }, RECONNECT_DELAY);
     }
@@ -167,10 +195,12 @@ class WebSocketService {
     send(data) {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify(data));
-            console.log("📤 Sent:", data);
+            logForAndroid("debug", "WebSocket sent payload", data);
             return true;
         } else {
-            console.error("❌ WebSocket is not connected");
+            logForAndroid("error", "WebSocket is not connected", {
+                readyState: this.ws?.readyState ?? null,
+            });
             return false;
         }
     }
@@ -199,7 +229,10 @@ class WebSocketService {
                 try {
                     callback(data);
                 } catch (error) {
-                    console.error(`Error in ${event} listener:`, error);
+                    logForAndroid("error", "Error in event listener", {
+                        event,
+                        error: toSerializableError(error),
+                    });
                 }
             });
         }

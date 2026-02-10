@@ -2,6 +2,7 @@ import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import aiLogo from "../assets/ai_logo.png";
+import { logForAndroid } from "../utils/mobileLogger";
 
 const ChatHeader = ({
     isConnected,
@@ -11,13 +12,13 @@ const ChatHeader = ({
     const { isDark } = useApp();
 
     const goBack = () => {
-        console.log("🔙 Back button clicked new new");
+        logForAndroid("log", "Back button clicked", null);
 
         if (window.AndroidJson && window.AndroidJson.onWebBackPressed) {
-            console.log("📱 Calling Android app back function new new");
+            logForAndroid("log", "Calling Android app back function", null);
             window.AndroidJson.onWebBackPressed();
         } else {
-            console.log("🌐 Using browser back (fallback) new new");
+            logForAndroid("log", "Using browser back fallback", null);
             window.history.back();
         }
     };

@@ -5,6 +5,7 @@ import "highlight.js/styles/atom-one-dark.css";
 import { marked } from "marked";
 import hljs from "highlight.js";
 import katex from "katex";
+import { logForAndroid, toSerializableError } from "../utils/mobileLogger";
 
 // Window obyektiga qo'shish
 if (typeof window !== "undefined") {
@@ -221,7 +222,11 @@ const MarkdownRenderer = ({ content, isStreaming = false }) => {
 
             return marked.parse(cleanedContent);
         } catch (error) {
-            console.error("MarkdownRenderer error:", error);
+            logForAndroid(
+                "error",
+                "MarkdownRenderer error",
+                toSerializableError(error),
+            );
             return content;
         }
     }, [content, isStreaming]);

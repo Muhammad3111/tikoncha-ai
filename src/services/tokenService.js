@@ -2,6 +2,7 @@
  * WebSocket Token Service
  * Manages WebSocket session tokens with automatic refresh
  */
+import { logForAndroid, toSerializableError } from "../utils/mobileLogger";
 
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "https://api.tikoncha.uz";
@@ -36,11 +37,15 @@ class TokenService {
      */
     async getSessionToken() {
         if (this.isTokenValid()) {
-            console.log("✅ Using cached session token");
+            logForAndroid("log", "Using cached session token", {
+                expiresAt: this.expiresAt
+                    ? new Date(this.expiresAt).toISOString()
+                    : null,
+            });
             return this.sessionToken;
         }
 
-        console.log("🔄 Fetching new session token...");
+        logForAndroid("log", "Fetching new session token", null);
         return await this.fetchNewToken();
     }
 
@@ -88,18 +93,23 @@ class TokenService {
             this.sessionToken = session_token;
             this.expiresAt = Date.now() + expires_in * 1000;
 
-            console.log("✅ New session token received");
-            console.log(`   Expires in: ${expires_in} seconds`);
-            console.log(
-                `   Will refresh at: ${new Date(this.expiresAt - TOKEN_REFRESH_BUFFER * 1000).toLocaleTimeString()}`,
-            );
+            logForAndroid("log", "New session token received", {
+                expiresInSeconds: expires_in,
+                refreshAt: new Date(
+                    this.expiresAt - TOKEN_REFRESH_BUFFER * 1000,
+                ).toISOString(),
+            });
 
             this.scheduleRefresh(expires_in);
             this.emit("token_refreshed", { session_token, expires_in });
 
             return this.sessionToken;
         } catch (error) {
-            console.error("❌ Failed to fetch session token:", error);
+            logForAndroid(
+                "error",
+                "Failed to fetch session token",
+                toSerializableError(error),
+            );
             this.emit("token_error", { error: error.message });
             throw error;
         }
@@ -118,17 +128,21 @@ class TokenService {
 
         if (refreshIn > 0) {
             this.refreshTimer = setTimeout(async () => {
-                console.log("⏰ Auto-refreshing session token...");
+                logForAndroid("log", "Auto-refreshing session token", null);
                 try {
                     await this.fetchNewToken();
                 } catch (error) {
-                    console.error("❌ Auto-refresh failed:", error);
+                    logForAndroid(
+                        "error",
+                        "Auto-refresh failed",
+                        toSerializableError(error),
+                    );
                 }
             }, refreshIn);
 
-            console.log(
-                `⏰ Token refresh scheduled in ${Math.floor(refreshIn / 1000)} seconds`,
-            );
+            logForAndroid("log", "Token refresh scheduled", {
+                refreshInSeconds: Math.floor(refreshIn / 1000),
+            });
         }
     }
 
@@ -137,7 +151,7 @@ class TokenService {
      * @returns {Promise<string>} New session token
      */
     async refreshToken() {
-        console.log("🔄 Manual token refresh requested");
+        logForAndroid("log", "Manual token refresh requested", null);
         return await this.fetchNewToken();
     }
 
@@ -151,7 +165,7 @@ class TokenService {
         }
         this.sessionToken = null;
         this.expiresAt = null;
-        console.log("🧹 Token service cleared");
+        logForAndroid("log", "Token service cleared", null);
     }
 
     /**
@@ -160,7 +174,7 @@ class TokenService {
      */
     updateJwtToken(newJwtToken) {
         this.jwtToken = newJwtToken;
-        console.log("🔄 JWT token updated");
+        logForAndroid("log", "JWT token updated", null);
     }
 
     /**
@@ -189,7 +203,10 @@ class TokenService {
                 try {
                     callback(data);
                 } catch (error) {
-                    console.error(`Error in ${event} listener:`, error);
+                    logForAndroid("error", "Error in event listener", {
+                        event,
+                        error: toSerializableError(error),
+                    });
                 }
             });
         }

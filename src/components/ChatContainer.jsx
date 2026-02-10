@@ -16,7 +16,7 @@ const ChatContainer = ({
     // Scroll to bottom
     const scrollToBottom = (instant = false) => {
         if (instant) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+            messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
         } else {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }

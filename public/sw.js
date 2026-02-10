@@ -4,17 +4,49 @@
 
 const CACHE_NAME = "tikoncha-chat-v1";
 const OFFLINE_URL = "/offline.html";
+const LOG_PREFIX = "[Mobile Debug][SW]";
 
 const CACHE_URLS = ["/", "/index.html", "/offline.html", "/manifest.json"];
 
+const stringifyPayload = (payload) => {
+    if (payload === null || typeof payload === "undefined") {
+        return "";
+    }
+
+    if (typeof payload === "string") {
+        return payload;
+    }
+
+    try {
+        return JSON.stringify(payload);
+    } catch (_error) {
+        return String(payload);
+    }
+};
+
+const swLog = (level, label, payload) => {
+    const logger =
+        typeof console[level] === "function"
+            ? console[level].bind(console)
+            : console.log.bind(console);
+    const payloadText = stringifyPayload(payload);
+    const message = payloadText
+        ? `${LOG_PREFIX} ${label}: ${payloadText}`
+        : `${LOG_PREFIX} ${label}`;
+    logger(message);
+};
+
 self.addEventListener("install", (event) => {
-    console.log("Service Worker: Installing...");
+    swLog("log", "Service Worker installing");
 
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log("Service Worker: Caching files");
+            swLog("log", "Service Worker caching files", CACHE_URLS);
             return cache.addAll(CACHE_URLS).catch((error) => {
-                console.error("Service Worker: Cache failed", error);
+                swLog("error", "Service Worker cache failed", {
+                    message: error?.message || String(error),
+                    stack: error?.stack,
+                });
             });
         }),
     );
@@ -23,17 +55,16 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-    console.log("Service Worker: Activating...");
+    swLog("log", "Service Worker activating");
 
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log(
-                            "Service Worker: Deleting old cache",
+                        swLog("log", "Service Worker deleting old cache", {
                             cacheName,
-                        );
+                        });
                         return caches.delete(cacheName);
                     }
                 }),

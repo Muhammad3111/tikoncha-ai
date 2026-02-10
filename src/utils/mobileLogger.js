@@ -70,7 +70,10 @@ export const logForAndroid = (level, label, payload) => {
             ? console[level].bind(console)
             : console.log.bind(console);
 
-    const line = `${LOG_PREFIX} ${label}: ${stringifyForLog(payload)}`;
+    const hasPayload = payload !== null && typeof payload !== "undefined";
+    const line = hasPayload
+        ? `${LOG_PREFIX} ${label}: ${stringifyForLog(payload)}`
+        : `${LOG_PREFIX} ${label}`;
 
     if (line.length <= CHUNK_SIZE) {
         logger(line);

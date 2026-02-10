@@ -20,6 +20,70 @@ const parseBoolean = (value) => {
     return null;
 };
 
+const tryParseJson = (value) => {
+    try {
+        return { ok: true, value: JSON.parse(value) };
+    } catch (_error) {
+        return { ok: false, value };
+    }
+};
+
+const decodeMaybeJson = (value, maxDepth = 4) => {
+    let decoded = value;
+
+    for (let depth = 0; depth < maxDepth; depth += 1) {
+        if (typeof decoded !== "string") {
+            break;
+        }
+
+        const trimmed = decoded.trim();
+        if (!trimmed) {
+            return null;
+        }
+
+        const parsed = tryParseJson(trimmed);
+        if (!parsed.ok) {
+            return decoded;
+        }
+
+        decoded = parsed.value;
+    }
+
+    return decoded;
+};
+
+const parseIncomingMessage = (rawPayload) => {
+    const decodedRoot = decodeMaybeJson(rawPayload);
+
+    if (
+        !decodedRoot ||
+        typeof decodedRoot !== "object" ||
+        Array.isArray(decodedRoot)
+    ) {
+        return null;
+    }
+
+    let mergedPayload = { ...decodedRoot };
+
+    ["data", "payload", "message"].forEach((key) => {
+        if (!Object.prototype.hasOwnProperty.call(decodedRoot, key)) {
+            return;
+        }
+
+        const decodedNested = decodeMaybeJson(decodedRoot[key]);
+        if (
+            decodedNested &&
+            typeof decodedNested === "object" &&
+            !Array.isArray(decodedNested)
+        ) {
+            // Nested payload may keep config values while root keeps metadata like `type`.
+            mergedPayload = { ...decodedNested, ...mergedPayload };
+        }
+    });
+
+    return mergedPayload;
+};
+
 export const useApp = () => {
     const context = useContext(AppContext);
     if (!context) {
@@ -69,13 +133,15 @@ export const AppProvider = ({ children }) => {
 
         // Mobile appdan postMessage orqali ma'lumotlarni qabul qilish
         const handleMessage = (event) => {
-            logForAndroid("debug", "Raw message", event.data);
+            const rawPayload =
+                typeof event?.data !== "undefined"
+                    ? event.data
+                    : event?.detail?.data ?? event?.detail ?? null;
+
+            logForAndroid("debug", "Raw message", rawPayload);
 
             try {
-                const data =
-                    typeof event.data === "string"
-                        ? JSON.parse(event.data)
-                        : event.data;
+                const data = parseIncomingMessage(rawPayload);
 
                 logForAndroid("debug", "Parsed JSON", data);
 
@@ -85,7 +151,7 @@ export const AppProvider = ({ children }) => {
                 }
 
                 // Token
-                if (data.token) {
+                if (typeof data.token === "string" && data.token.trim()) {
                     setToken(
                         data.token.startsWith("Bearer ")
                             ? data.token
@@ -94,23 +160,39 @@ export const AppProvider = ({ children }) => {
                 }
 
                 // Chat ID
-                if (data.chatId) {
-                    setChatId(data.chatId);
+                const incomingChatId = data.chatId ?? data.chatID ?? data.chat_id;
+                if (
+                    typeof incomingChatId !== "undefined" &&
+                    incomingChatId !== null &&
+                    String(incomingChatId).trim()
+                ) {
+                    setChatId(String(incomingChatId));
                 }
 
                 // Chat Title
-                if (data.chatTitle) {
-                    setChatTitle(data.chatTitle);
+                const incomingChatTitle = data.chatTitle ?? data.chat_title;
+                if (
+                    typeof incomingChatTitle === "string" &&
+                    incomingChatTitle.trim()
+                ) {
+                    setChatTitle(incomingChatTitle);
                 }
 
                 // Theme
-                if (data.theme) {
+                if (data.theme === "dark" || data.theme === "light") {
                     setTheme(data.theme);
                 }
 
                 // Font Size
-                if (data.fontSize) {
-                    setFontSize(parseInt(data.fontSize));
+                const incomingFontSize = data.fontSize ?? data.font_size;
+                if (
+                    typeof incomingFontSize !== "undefined" &&
+                    incomingFontSize !== null
+                ) {
+                    const parsedFontSize = parseInt(incomingFontSize, 10);
+                    if (!Number.isNaN(parsedFontSize)) {
+                        setFontSize(parsedFontSize);
+                    }
                 }
 
                 // Parent color control (true/false)
@@ -120,9 +202,22 @@ export const AppProvider = ({ children }) => {
                         setUseParentColors(parsedParent);
                     }
                 }
+                if (Object.prototype.hasOwnProperty.call(data, "useParentColors")) {
+                    const parsedParentColors = parseBoolean(data.useParentColors);
+                    if (parsedParentColors !== null) {
+                        setUseParentColors(parsedParentColors);
+                    }
+                }
 
                 // Barcha ma'lumotlar bir vaqtda kelishi mumkin
-                if (data.type === "init" || data.type === "config") {
+                if (
+                    data.type === "init" ||
+                    data.type === "config" ||
+                    Object.prototype.hasOwnProperty.call(data, "token") ||
+                    Object.prototype.hasOwnProperty.call(data, "chatId") ||
+                    Object.prototype.hasOwnProperty.call(data, "chatID") ||
+                    Object.prototype.hasOwnProperty.call(data, "chat_id")
+                ) {
                     // Ma'lumotlar kelganda ready qilish
                     setIsReady(true);
                 }
@@ -132,12 +227,14 @@ export const AppProvider = ({ children }) => {
                     "Error parsing message from mobile app",
                     toSerializableError(error),
                 );
-                logForAndroid("error", "Parse failed payload", event.data);
+                logForAndroid("error", "Parse failed payload", rawPayload);
             }
         };
 
         // Window message listener
         window.addEventListener("message", handleMessage);
+        // Some iOS/Android WebView bridges emit on document instead of window.
+        document.addEventListener("message", handleMessage);
 
         // Mobile app ga ready signal yuborish
         if (window.ReactNativeWebView) {
@@ -157,6 +254,7 @@ export const AppProvider = ({ children }) => {
 
         return () => {
             window.removeEventListener("message", handleMessage);
+            document.removeEventListener("message", handleMessage);
             clearTimeout(readyTimeout);
         };
     }, []);

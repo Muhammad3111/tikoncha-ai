@@ -235,7 +235,8 @@
             btn.innerHTML = CHECK_ICON;
             setTimeout(() => { btn.innerHTML = COPY_ICON; }, 2000);
           } catch (err) {
-            console.error('Failed to copy', err);
+            const errorText = err && err.stack ? `${err.message}\n${err.stack}` : String(err);
+            console.error(`[Mobile Debug] Failed to copy: ${errorText}`);
           }
 
           document.body.removeChild(textArea);

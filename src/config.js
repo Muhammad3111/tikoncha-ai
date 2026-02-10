@@ -1,4 +1,6 @@
 // API konfiguratsiyasi
+import { logForAndroid } from "./utils/mobileLogger";
+
 export const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "https://api.tikoncha.uz";
 export const WS_TOKEN_URL =
@@ -10,7 +12,11 @@ export const WS_URL_TEMPLATE =
 // WebSocket URL yaratish (session token bilan)
 export const getWebSocketUrl = (sessionToken) => {
     if (!sessionToken) {
-        console.error("Session token is required for WebSocket connection");
+        logForAndroid(
+            "error",
+            "Session token is required for WebSocket connection",
+            null,
+        );
         return null;
     }
 
